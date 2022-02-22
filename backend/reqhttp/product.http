@@ -1,0 +1,25 @@
+GET  http://localhost:5000/api/products/seed
+
+###
+Post http://localhost:5000/api/products/create
+Content-Type: application/json
+
+{
+   "name":"Nhà Tân Bình",
+   "user" :"6200933a189dbf4d5f3020b7",
+   "status":"Bán",
+   "type":"Nhà",
+   "address":"16, Âu Cơ, Tân Bình, Hồ Chí Minh",
+   "description":"Chủ Đầu Tư uy tín: Công ty Cổ Phần Phát Triển BĐS Phát Đạt",
+    "price":1200000,
+    "acreage":2000,
+    "bedroom":2,
+    "toilet":2,
+    "countInStock":1,
+    "rating": 4.5,
+      "numReviews": 10,
+    "image":"../template/images/amazon.jpg"
+}
+
+###
+GET  http://localhost:5000/api/products/62033d26858da6774ea08cdd

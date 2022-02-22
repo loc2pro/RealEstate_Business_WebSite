@@ -1,0 +1,27 @@
+Post http://localhost:5000/api/users/signin
+Content-Type: application/json
+
+{
+    "email":"admin@gmail.com",
+    "password":"loc123"
+}
+
+###
+Post http://localhost:5000/api/users/register
+Content-Type: application/json
+
+{
+    "email":"admin@gmail.com",
+    "password":"loc123",
+    "phone":"0981074090",
+    "address":"đức chánh",
+    "name":"Nguyễn Hữu Lộc"
+}
+###
+Post  http://localhost:5000/api/users/info
+Content-Type: application/json
+
+{
+    "id":"6200933a189dbf4d5f3020b7"
+   
+}
