@@ -1,16 +1,18 @@
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { BrowserRouter, Link, Route } from "react-router-dom";
-import { signout } from "./actions/userActions";
-import Contact from "./components/Layout/Contact";
-import Employee from "./components/Layout/Employee";
+import "antd/dist/antd.css";
+import $ from "jquery";
+import React, { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { BrowserRouter, Route } from "react-router-dom";
+import { listProductCategories } from "./actions/productActions";
+//import { signout } from "./actions/userActions";
+import AdminRoute from "./components/AdminRoute";
 import Footer from "./components/Layout/Footer";
 import Header from "./components/Layout/Header";
-import Search from "./components/Layout/Search";
-import Service from "./components/Layout/Service";
 import Map from "./components/Map";
 import Post from "./components/Post";
+import PostGround from "./components/PostGround";
 import CartScreen from "./screens/CartScreen";
+import GroundScreen from "./screens/GroundScreen";
 import HomeScreen from "./screens/HomeScreen";
 import OrderHistoryScreen from "./screens/OrderHistoryScreen";
 import OrderSreen from "./screens/OrderScreen";
@@ -19,62 +21,80 @@ import PlaceOrderSreen from "./screens/PlaceOrderSreen";
 import ProductScreen from "./screens/ProductScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import RegisterScreen from "./screens/RegisterScreen";
-import ServiceScreen from "./screens/ServiceScreen";
+import SearchScreen from "./screens/SearchScreen";
 import ShippingAddressScreen from "./screens/ShippingAddressScreen";
 import SigninScreen from "./screens/SigninScreen";
+import SupportScreen from "./screens/SupportScreen";
 function App() {
-  const cart = useSelector((state) => state.cart);
-  const { cartItems } = cart;
-  const userSignin = useSelector((state) => state.userSignin);
-  const { userInfo } = userSignin;
+  // const cart = useSelector((state) => state.cart);
+  // const [sidebarIsOpen, setSidebarIsOpen] = useState(false);
+  // const { cartItems } = cart;
+  // const userSignin = useSelector((state) => state.userSignin);
+  // const { userInfo } = userSignin;
   const dispatch = useDispatch();
-  const signoutHandler = () => {
-    dispatch(signout());
-  };
+  // const signoutHandler = () => {
+  //   dispatch(signout());
+  // };
+  useEffect(() => {
+    dispatch(listProductCategories());
+  }, [dispatch]);
+  //  const productCategoryList = useSelector((state) => state.productCategoryList);
+  // const {
+  //   loading: loadingCategories,
+  //   error: errorCategories,
+  //   categories,
+  // } = productCategoryList;
+
+  $(document).ready(function () {
+    $(window).scroll(function () {
+      if ($(this).scrollTop()) {
+        $("#backtop").fadeIn();
+      } else {
+        $("#backtop").fadeOut();
+      }
+    });
+    $("#backtop").click(function () {
+      $("html,body").animate(
+        {
+          scrollTop: 0,
+        },
+        10
+      );
+    });
+  });
   return (
     <BrowserRouter>
       <div className="grid-container">
         <Header />
 
-        {/* <header className="row">
-          <div>
-            <Link to="/" className="brand">
-              amazona
-            </Link>
+        <main style={{ marginTop: "7.5rem", minHeight: "600px" }}>
+          <div id="backtop">
+            <i class="fas fa-chevron-up"></i>
           </div>
-          <div>
-            <Link to="/cart">
-              Cart
-              {cartItems.length > 0 && (
-                <span className="badge">{cartItems.length}</span>
-              )}
-            </Link>
-            {userInfo ? (
-              <div className="dropdown">
-                <Link to="#">
-                  {userInfo.name} <i className="fa fa-caret-down"></i>
-                </Link>
-                <ul className="dropdown-content">
-                  <li>
-                    <Link to="/profile">Profile</Link>
-                  </li>
-                  <li>
-                    <Link to="/orderhistory">Order History</Link>
-                  </li>
-                  <Link to="/signout" onClick={signoutHandler}>
-                    Sign Out
-                  </Link>
-                </ul>
-              </div>
-            ) : (
-              <Link to="/signin">Signin</Link>
-            )}
-          </div>
-        </header> */}
-        <main style={{ marginTop: "7.5rem" }}>
+          <Route
+            path="/search/name/:name?"
+            component={SearchScreen}
+            exact
+          ></Route>
+          <Route
+            path="/search/type/:type"
+            component={SearchScreen}
+            exact
+          ></Route>
+          <Route
+            path="/search/type/:type/name/:name"
+            component={SearchScreen}
+            exact
+          ></Route>
+          <Route
+            path="/search/type/:type/name/:name/min/:min/max/:max/order/:order/pageNumber/:pageNumber"
+            component={SearchScreen}
+            exact
+          ></Route>
+          <Route path="/postGround" component={PostGround}></Route>
           <Route path="/post" component={Post}></Route>
           <Route path="/map" component={Map}></Route>
-          <Route path="/chungcu" component={ServiceScreen}></Route>
+          <Route path="/ground" component={GroundScreen}></Route>
           <Route path="/signin" component={SigninScreen}></Route>
           <Route path="/register" component={RegisterScreen}></Route>
           <Route path="/cart/:id?" component={CartScreen}></Route>
@@ -86,6 +106,7 @@ function App() {
           <Route path="/orderhistory" component={OrderHistoryScreen}></Route>
           <Route path="/profile" component={ProfileScreen}></Route>
           <Route path="/" component={HomeScreen} exact></Route>
+          <AdminRoute path="/support" component={SupportScreen}></AdminRoute>
         </main>
         <Footer />
       </div>

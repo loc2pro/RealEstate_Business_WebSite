@@ -1,112 +1,135 @@
-import React, { Component } from "react";
-import { Map, Marker, GoogleApiWrapper } from "google-maps-react";
-import PlacesAutocomplete, {
-  geocodeByAddress,
-  getLatLng,
-} from "react-places-autocomplete";
+import { Upload } from "antd";
+import ImgCrop from "antd-img-crop";
+import "antd/dist/antd.css";
+import AWS from "aws-sdk";
+import React, { useState } from "react";
 
-export class MapContainer extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      address: "",
+const Map = () => {
+  const [fileList, setFileList] = useState([]);
+  const [images, setImages] = useState([]);
+  const onChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+  };
 
-      showingInfoWindow: false,
-      activeMarker: {},
-      selectedPlace: {},
+  const onPreview = async (file) => {
+    let src = file.url;
+    if (!src) {
+      src = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file.originFileObj);
+        reader.onload = () => resolve(reader.result);
+      });
+    }
+    const image = new Image();
+    image.src = src;
+    const imgWindow = window.open(src);
+    imgWindow.document.write(image.outerHTML);
+  };
+  const props = {
+    customRequest({
+      action,
+      data,
+      file,
+      filename,
+      headers,
+      onError,
+      onProgress,
+      onSuccess,
+      withCredentials,
+    }) {
+      AWS.config.update({
+        accessKeyId: "AKIAWPLFF2RHPNOWRBHJ",
+        secretAccessKey: "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",
+        //   sessionToken: ""
+      });
 
-      mapCenter: {
-        lat: 10.8230989,
-        lng: 106.6296638,
-      },
+      const S3 = new AWS.S3();
+      console.log("DEBUG filename", file.name);
+      console.log("DEBUG file type", file.type);
+
+      const objParams = {
+        Bucket: "nguyenhuuloc-sinhvien-iuh",
+        Key: "locdev2000@gmail.com" + "/" + file.name,
+        Body: file,
+        ContentType: file.type, // TODO: You should set content-type because AWS SDK will not automatically set file MIME
+      };
+
+      S3.putObject(objParams)
+        .on("httpUploadProgress", function ({ loaded, total }) {
+          onProgress(
+            {
+              percent: Math.round((loaded / total) * 100),
+            },
+            file
+          );
+        })
+        .send(function (err, data) {
+          if (err) {
+            onError();
+            console.log("Something went wrong");
+            console.log(err.code);
+            console.log(err.message);
+          } else {
+            onSuccess(data.response, file);
+            console.log("SEND FINISHED");
+            console.log("1", data.response);
+          }
+        });
+    },
+  };
+  const onRemoveImage = (file) => {
+    AWS.config.update({
+      accessKeyId: "AKIAWPLFF2RHPNOWRBHJ",
+      secretAccessKey: "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",
+      //   sessionToken: ""
+    });
+
+    const S3 = new AWS.S3();
+    console.log("DEBUG filename", file.name);
+    console.log("DEBUG file type", file.type);
+
+    const objParams = {
+      Bucket: "nguyenhuuloc-sinhvien-iuh",
+      Key: "locdev2000@gmail.com" + "/" + file.name,
     };
-  }
 
-  handleChange = (address) => {
-    this.setState({ address });
+    S3.deleteObject(objParams, function (err, data) {
+      if (err) console.log(err, err.stack);
+      // error
+      else console.log("success"); // deleted
+    });
   };
 
-  handleSelect = (address) => {
-    this.setState({ address });
-    geocodeByAddress(address)
-      .then((results) => getLatLng(results[0]))
-      .then((latLng) => {
-        console.log("Success", latLng.lat);
-        this.setState({ mapCenter: latLng });
-      })
-      .catch((error) => console.error("Error", error));
+  const luu = () => {
+    let listImages = [];
+    for (let item of fileList) {
+      listImages.push(item.originFileObj.name);
+    }
+    setImages(listImages);
+    console.log(listImages);
   };
 
-  render() {
-    return (
-      <div id="googleMaps">
-        <PlacesAutocomplete
-          value={this.state.address}
-          onChange={this.handleChange}
-          onSelect={this.handleSelect}
-        >
-          {({
-            getInputProps,
-            suggestions,
-            getSuggestionItemProps,
-            loading,
-          }) => (
-            <div>
-              <input
-                {...getInputProps({
-                  placeholder: "Search Places ...",
-                  className: "location-search-input",
-                })}
-              />
-              <div className="autocomplete-dropdown-container">
-                {loading && <div>Loading...</div>}
-                {suggestions.map((suggestion) => {
-                  const className = suggestion.active
-                    ? "suggestion-item--active"
-                    : "suggestion-item";
-                  // inline style for demonstration purpose
-                  const style = suggestion.active
-                    ? { backgroundColor: "#fafafa", cursor: "pointer" }
-                    : { backgroundColor: "#ffffff", cursor: "pointer" };
-                  return (
-                    <div
-                      {...getSuggestionItemProps(suggestion, {
-                        className,
-                        style,
-                      })}
-                    >
-                      <span>{suggestion.description}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </PlacesAutocomplete>
-
-        <Map
-          google={this.props.google}
-          initialCenter={{
-            lat: this.state.mapCenter.lat,
-            lng: this.state.mapCenter.lng,
+  return (
+    <div className="row" style={{ marginTop: "500px" }}>
+      <ImgCrop>
+        <Upload
+          {...props}
+          onRemove={(file) => {
+            onRemoveImage(file);
+            return { ...props };
           }}
-          center={{
-            lat: this.state.mapCenter.lat,
-            lng: this.state.mapCenter.lng,
-          }}
+          listType="picture-card"
+          fileList={fileList}
+          onChange={onChange}
+          onPreview={onPreview}
         >
-          <Marker
-            position={{
-              lat: this.state.mapCenter.lat,
-              lng: this.state.mapCenter.lng,
-            }}
-          />
-        </Map>
-      </div>
-    );
-  }
-}
+          {fileList.length < 5 && "+ Upload"}
+        </Upload>
+      </ImgCrop>
+      {images.length > 0 && images.map()}
+      <button onClick={luu}>Lưu</button>
+    </div>
+  );
+};
 
-export default GoogleApiWrapper({
-  apiKey: "AIzaSyDnMQ1A8AKcQcbuAsiZWVaSt1j_MyB6kCs",
-})(MapContainer);
+export default Map;

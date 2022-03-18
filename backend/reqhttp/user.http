@@ -25,3 +25,5 @@ Content-Type: application/json
     "id":"6200933a189dbf4d5f3020b7"
    
 }
+### get user
+Get  http://localhost:5000/api/users/

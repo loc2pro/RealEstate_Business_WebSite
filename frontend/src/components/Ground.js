@@ -1,22 +1,22 @@
 import React from "react";
-
-export default function Service(props) {
-  const { product } = props;
+import url from "../api/url";
+export default function Ground(props) {
+  const { ground } = props;
 
   return (
     <div>
       <figure className="all">
         <div class="box-container">
-          <div class="box" key={product._id}>
+          <div class="box" key={ground._id}>
             <div class="image-container">
-              <img src={product.image} alt={product.name} />
+              <img src={`${url}${ground.image}`} alt={ground.name} />
             </div>
             <figcaption>
               <h2>
                 Bất Động Sản <span>Phát Lộc</span>
               </h2>
-              <p>{product.name}</p>
-              <a href={`/product/${product._id}`}></a>
+              <p>{ground.name}</p>
+              <a href={`/ground/${ground._id}`}></a>
             </figcaption>
           </div>
         </div>

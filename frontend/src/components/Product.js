@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Rating from "./Rating";
 import dayjs from "dayjs";
+import urlImages from "../api/url";
 
 export default function Product(props) {
   const { product } = props;
@@ -15,17 +16,20 @@ export default function Product(props) {
           <div class="box-container">
             <div class="box">
               <div class="image-container">
-                <img src={product.image} alt={product.name} />
+                <img
+                  src={`${urlImages}${product.image[0]}`}
+                  alt={product.name}
+                />
                 <div class="info">
                   <h3>{df4} Ngày trước</h3>
                   <h3>{product.status}</h3>
                 </div>
                 <div class="icons">
                   <a href="#" class="fas fa-film">
-                    <h3>{product._id}</h3>
+                    <h3>{product.type}</h3>
                   </a>
                   <a href="#" class="fas fa-camera">
-                    <h3>{product.image.length} </h3>
+                    <h3>{product.image.length}</h3>
                   </a>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import "react-responsive-carousel/lib/styles/carousel.min.css";
+import 'antd/dist/antd.css';
 import store from './store';
 
 ReactDOM.render(

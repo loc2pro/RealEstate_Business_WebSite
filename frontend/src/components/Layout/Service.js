@@ -1,4 +1,7 @@
 import React from "react";
+import s1 from "../../assets/s-1.svg";
+import s2 from "../../assets/s-2.svg";
+import s3 from "../../assets/s-3.svg";
 
 export default function Service() {
   return (
@@ -11,7 +14,7 @@ export default function Service() {
 
         <div class="box-container">
           <div class="box">
-            <img src="images/s-1.png" alt="" />
+            <img src={s1}/>
             <h3>Mua Nhà</h3>
             <p>
               Bạn đang cần mua nhà, hãy tìm đến ngay với Lộc Phát. Dịch vụ bất động sản uy tín.
@@ -22,7 +25,7 @@ export default function Service() {
           </div>
 
           <div class="box">
-            <img src="images/s-2.png" alt="" />
+            <img src={s2}/>
             <h3>Thuê Nhà</h3>
             <p>
               Bạn đang cần thuê nhà, chung cư. Bất động sản Lộc Phát là một sự lựa chọn.
@@ -33,7 +36,7 @@ export default function Service() {
           </div>
 
           <div class="box">
-            <img src="images/s-3.png" alt="" />
+            <img src={s3}/>
             <h3>Bán Nhà</h3>
             <p>
               Bạn có thể đăng tin bất kì sản phẩm trên trang web của chúng tôi.

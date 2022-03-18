@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { addToCart, removeFromCart } from "../actions/cartActions";
 import MessageBox from "../components/MessageBox";
+import urlImages from "../api/url";
 
 export default function CartScreen(props) {
   const productId = props.match.params.id;
@@ -15,62 +16,71 @@ export default function CartScreen(props) {
   const dispatch = useDispatch();
   useEffect(() => {
     if (productId) {
+      console.log("Cart", productId);
       dispatch(addToCart(productId, qty));
     }
   }, [dispatch, productId, qty]);
-  const checkoutHandler = () => {
-    props.history.push("/signin?redirect=shipping");
-  };
+  // const checkoutHandler = () => {
+  //   // props.history.push("/signin?redirect=shipping");
+  //   props.history.push("/");
+  // };
   const removeFromCartHandler = (id) => {
     //delete action
     dispatch(removeFromCart(id));
   };
   return (
     <div className="row top">
-      <div className="col-2">
-        <h1>Shopping Cart</h1>
+      <div className="col-9">
+        <h1 style={{ color: "red" }}>Sản Phẩm Ưa Thích</h1>
         {cartItems.length === 0 ? (
           <MessageBox>
-            Cart is Empty. <Link to="/">Go Shopping</Link>
+            Chưa có sản phẩm ưa thích. <Link to="/">Quay về trang chủ</Link>
           </MessageBox>
         ) : (
           <ul>
             {cartItems.map((item) => (
-              <li key={item.product}>
-                <div className="row">
+              <li
+                key={item.product}
+                style={{
+                  border: "1px solid gray",
+                  margin: "1rem",
+                  borderRadius: "2rem",
+                  fontSize: "25px",
+                  fontWeight: "bold",
+                }}
+              >
+                <div
+                  className="row"
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
                   <div>
                     <img
-                      src={item.image}
+                      src={`${urlImages}${item.image[0]}`}
                       alt={item.name}
                       className="small"
                     ></img>
                   </div>
-                  <div className="min-30">
+                  <div>
                     <Link to={`/product/${item.product}`}>{item.name}</Link>
                   </div>
                   <div>
-                    <select
-                      value={item.qty}
-                      onChange={(e) =>
-                        dispatch(
-                          addToCart(item.product, Number(e.target.value))
-                        )
-                      }
-                    >
-                      {[...Array(item.countInStock).keys()].map((x) => (
-                        <option key={x + 1} value={x + 1}>
-                          {x + 1}
-                        </option>
-                      ))}
-                    </select>
+                    {item.price.toLocaleString("it-IT", {
+                      style: "currency",
+                      currency: "VND",
+                    })}
                   </div>
-                  <div>${item.price}</div>
                   <div>
                     <button
+                      style={{ marginRight: "1rem" }}
                       type="button"
                       onClick={() => removeFromCartHandler(item.product)}
                     >
-                      Delete
+                      Xóa sản phẩm
                     </button>
                   </div>
                 </div>
@@ -79,25 +89,21 @@ export default function CartScreen(props) {
           </ul>
         )}
       </div>
-      <div className="col-1">
-        <div className="card card-body">
+      <div className="col-3">
+        <div className="card card-body" style={{ marginTop: "6rem" }}>
           <ul>
-            <li>
+            <li style={{ textAlign: "center" }}>
               <h2>
-                Subtotal ({cartItems.reduce((a, c) => a + c.qty, 0)} items) : $
-                {cartItems.reduce((a, c) => a + c.price * c.qty, 0)}
+                Tổng Tiền ({cartItems.reduce((a, c) => a + c.qty, 0)} sản phẩm):
               </h2>
-            </li>
-            <li>
-              <button
-                type="button"
-                onClick={checkoutHandler}
-                className=" primary block"
-                disabled={cartItems.length === 0}
-              >
-                {" "}
-                Proceed To Checkout
-              </button>
+              <h2>
+                {cartItems
+                  .reduce((a, c) => a + c.price * c.qty, 0)
+                  .toLocaleString("it-IT", {
+                    style: "currency",
+                    currency: "VND",
+                  })}
+              </h2>
             </li>
           </ul>
         </div>

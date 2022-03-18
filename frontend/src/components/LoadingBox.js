@@ -1,9 +1,16 @@
-import React from 'react'
-
+import React from "react";
+import styled from "@emotion/styled";
+import { Spin } from "antd";
 export default function LoadingBox() {
-    return (
-        <div className='loading'>
-            <i className=" fa fa-spinner fa-spin"></i> Loading....
-        </div>
-    )
+  return (
+    <Loading>
+      <Spin tip="Loading..." size="large" />
+    </Loading>
+  );
 }
+const Loading = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+`;

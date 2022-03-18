@@ -1,24 +1,131 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { notification, Upload } from "antd";
+import ImgCrop from "antd-img-crop";
+import "antd/dist/antd.css";
+import AWS from "aws-sdk";
+import axios from "axios";
 import FormData from "form-data";
+import "mapbox-gl/dist/mapbox-gl.css";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { postProduct } from "../actions/productActions";
-import { Map, Marker, GoogleApiWrapper } from "google-maps-react";
-import PlacesAutocomplete, {
-  geocodeByAddress,
-  getLatLng,
-} from "react-places-autocomplete";
 
-function Post() {
+function classNames(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+export default function Post() {
   const dispatch = useDispatch();
   const userSignin = useSelector((state) => state.userSignin);
   const { userInfo } = userSignin;
-  const [address, setAddress] = useState("");
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
-  const [mapCenter, setMapCenter] = useState({
-    lat: 10.8230989,
-    lng: 106.6296638,
+  const postProducts = useSelector((state) => state.postProducts);
+  //const { postproduct, loading } = postProducts;
+  const [lat, setLat] = useState(10.8230989);
+  const [lng, setLng] = useState(106.6296638);
+
+  const [fileList, setFileList] = useState([]);
+  const [images, setImages] = useState([]);
+  const [toast, setToast] = useState({
+    show: false,
+    success: false,
+    message: "",
   });
+  useEffect(() => {
+    if (toast) {
+      setTimeout(() => {
+        setToast({ ...toast, show: false });
+      }, 6000);
+    }
+  }, [toast]);
+  const onChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+  };
+
+  const onPreview = async (file) => {
+    let src = file.url;
+    if (!src) {
+      src = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file.originFileObj);
+        reader.onload = () => resolve(reader.result);
+      });
+    }
+    const image = new Image();
+    image.src = src;
+    const imgWindow = window.open(src);
+    imgWindow.document.write(image.outerHTML);
+  };
+  const props = {
+    customRequest({
+      action,
+      data,
+      file,
+      filename,
+      headers,
+      onError,
+      onProgress,
+      onSuccess,
+      withCredentials,
+    }) {
+      AWS.config.update({
+        accessKeyId: "AKIAWPLFF2RHPNOWRBHJ",
+        secretAccessKey: "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",
+      });
+
+      const S3 = new AWS.S3();
+      console.log("DEBUG filename", file.name);
+      console.log("DEBUG file type", file.type);
+
+      const objParams = {
+        Bucket: "nguyenhuuloc-sinhvien-iuh",
+        Key: "locdev2000@gmail.com" + "/" + file.name,
+        Body: file,
+        ContentType: file.type, // TODO: You should set content-type because AWS SDK will not automatically set file MIME
+      };
+
+      S3.putObject(objParams)
+        .on("httpUploadProgress", function ({ loaded, total }) {
+          onProgress(
+            {
+              percent: Math.round((loaded / total) * 100),
+            },
+            file
+          );
+        })
+        .send(function (err, data) {
+          if (err) {
+            onError();
+            console.log("Something went wrong");
+            console.log(err.code);
+            console.log(err.message);
+          } else {
+            onSuccess(data.response, file);
+          }
+        });
+    },
+  };
+  const onRemoveImage = (file) => {
+    AWS.config.update({
+      accessKeyId: "AKIAWPLFF2RHPNOWRBHJ",
+      secretAccessKey: "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",
+      //   sessionToken: ""
+    });
+
+    const S3 = new AWS.S3();
+    console.log("DEBUG filename", file.name);
+    console.log("DEBUG file type", file.type);
+
+    const objParams = {
+      Bucket: "nguyenhuuloc-sinhvien-iuh",
+      Key: "locdev2000@gmail.com" + "/" + file.name,
+    };
+
+    S3.deleteObject(objParams, function (err, data) {
+      if (err) console.log(err, err.stack);
+      // error
+      else console.log("success"); // deleted
+    });
+  };
+
   const [productForm, setProductForm] = useState({
     name: "",
     user: userInfo?._id,
@@ -31,11 +138,14 @@ function Post() {
     acreage: "",
     bedroom: "",
     toilet: "",
-    countInStock: "",
+    countInStock: 1,
   });
   const handleCreate = (e) => {
     e.preventDefault();
-    console.log("product", productForm);
+    let listImages = [];
+    for (let item of fileList) {
+      listImages.push(item.originFileObj.name);
+    }
     const data = new FormData();
     data.append("name", productForm.name);
     data.append("user", productForm.user);
@@ -48,19 +158,42 @@ function Post() {
     data.append("bedroom", productForm.bedroom);
     data.append("toilet", productForm.toilet);
     data.append("countInStock", productForm.countInStock);
-    data.append("image", productForm.image);
-    console.log(data);
+    for (let item of listImages) {
+      data.append("image", item);
+    }
+    data.append("lat", lat);
+    data.append("lng", lng);
     const create = dispatch(postProduct(data));
-    create.then((data) => {
-      console.log(data);
-    });
-    resetForm();
+    create
+      .then((data) => {
+        if (data.success) {
+          notification.success({
+            description: data.message,
+            placement: "bottomRight",
+            duration: 3,
+          });
+          resetForm();
+        } else {
+          notification.warning({
+            description: data.message,
+            placement: "bottomRight",
+            duration: 3,
+          });
+        }
+      })
+      .catch((err) => {
+        notification.error({
+          description: err.message,
+          placement: "bottomRight",
+          duration: 3,
+        });
+      });
   };
 
   const resetForm = () => {
     setProductForm({
       name: "",
-      user: null,
+      user: userInfo?._id,
       image: null,
       status: "",
       type: "",
@@ -70,48 +203,52 @@ function Post() {
       acreage: "",
       bedroom: "",
       toilet: "",
-      countInStock: "",
+      countInStock: 1,
     });
+    setFileList([]);
   };
 
   const handleChangedInput = (e) => {
     setProductForm({ ...productForm, [e.target.name]: e.target.value });
   };
 
-  const handleChange = (address) => {
-    // this.setState({ address });
-    setAddress(address);
-  };
-
-  const handleSelect = (address) => {
-    setAddress(address);
-    geocodeByAddress(address)
-      .then((results) => getLatLng(results[0]))
-      .then((latLng) => {
-        console.log("lat", latLng.lat);
-        console.log("lng", latLng.lng);
-        setMapCenter(latLng);
-      })
-      .catch((error) => console.error("Error", error));
-  };
+  useEffect(() => {
+    if (productForm?.address) {
+      axios
+        .get(
+          //9cbf0bc15d3901b7e043d8f76be8d73f370a82fe629a2d46
+          `https://maps.vietmap.vn/api/search?api-version=1.1&apikey=2f7cf1b8d4f0cce9ef2accb74b6c3cd90ac926aa78f90e4c&text=${productForm?.address}`
+        )
+        .then(function (response) {
+          console.log(response);
+          setLng(response.data.data.features[0].bbox[0]);
+          setLat(response.data.data.features[0].bbox[1]);
+          console.log(response);
+        })
+        .catch(function (error) {
+          console.log(error);
+        })
+        .then(function () {});
+    }
+  }, [productForm.address]);
 
   return (
     <div>
       <div className="row" style={{ width: "100%" }}>
         <div className="row center" style={{ width: "100%" }}>
-          <form enctype="multipart/form-data">
-            <h1 style={{ textAlign: "center" }}>Bất Động Sản Phát Lộc</h1>
+          <form enctype="multipart/form-data" style={{ width: "80%" }}>
+            <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
+              <span> Đăng Bài</span>
+            </h1>
 
             <div class="contentform">
-              <div id="sendmessage">Đăng bài</div>
-
               <div class="leftcontact">
                 <div class="form-group">
                   <p>
                     Tên Tài Sản<span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-male"></i>
+                    <i class="fas fa-home"></i>
                   </span>
                   <input
                     type="text"
@@ -129,15 +266,22 @@ function Post() {
                     Loại <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-user"></i>
+                    <i class="fas fa-align-center"></i>
                   </span>
-                  <input
-                    type="text"
+                  <select
                     name="type"
-                    id="type"
-                    value={productForm.type}
                     onChange={handleChangedInput}
-                  />
+                    style={{
+                      width: "94%",
+                      float: "right",
+                      marginTop: "5px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <option value="0">--- Lựa chọn ---</option>
+                    <option value="Nhà">Nhà</option>
+                    <option value="Chung cư">Chung cư</option>
+                  </select>
                   <div class="validation"></div>
                 </div>
 
@@ -146,24 +290,31 @@ function Post() {
                     Trạng Thái <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-envelope-o"></i>
+                    <i class="fas fa-exclamation"></i>
                   </span>
-                  <input
-                    type="text"
+                  <select
                     name="status"
-                    id="status"
-                    value={productForm.status}
                     onChange={handleChangedInput}
-                  />
+                    style={{
+                      width: "94%",
+                      float: "right",
+                      marginTop: "5px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <option value="0">--- Lựa chọn ---</option>
+                    <option value="Bán">Bán</option>
+                    <option value="Cho thuê">Cho thuê</option>
+                  </select>
                   <div class="validation"></div>
                 </div>
 
                 <div class="form-group">
                   <p>
-                    Giá <span>*</span>
+                    Giá (VND)<span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-home"></i>
+                    <i class="fas fa-hand-holding-usd"></i>
                   </span>
                   <input
                     type="number"
@@ -177,10 +328,10 @@ function Post() {
 
                 <div class="form-group">
                   <p>
-                    Diện tích <span>*</span>
+                    Diện tích (m<sup>2</sup>) <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-location-arrow"></i>
+                    <i class="far fa-square"></i>
                   </span>
                   <input
                     type="number"
@@ -191,13 +342,15 @@ function Post() {
                   />
                   <div class="validation"></div>
                 </div>
+              </div>
 
+              <div class="rightcontact">
                 <div class="form-group">
                   <p>
                     Phòng Ngủ <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-map-marker"></i>
+                    <i class="fas fa-bed"></i>
                   </span>
                   <input
                     type="number"
@@ -208,15 +361,12 @@ function Post() {
                   />
                   <div class="validation"></div>
                 </div>
-              </div>
-
-              <div class="rightcontact">
                 <div class="form-group">
                   <p>
                     Phòng Vệ Sinh <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-building-o"></i>
+                    <i class="fas fa-toilet"></i>
                   </span>
                   <input
                     type="number"
@@ -233,7 +383,7 @@ function Post() {
                     Số Lượng <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-phone"></i>
+                    <i class="fas fa-anchor"></i>
                   </span>
                   <input
                     type="text"
@@ -241,37 +391,16 @@ function Post() {
                     id="countInStock"
                     value={productForm.countInStock}
                     onChange={handleChangedInput}
+                    disabled
                   />
                   <div class="validation"></div>
                 </div>
-
-                <div class="form-group">
-                  <p>
-                    Hình Ảnh <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fa fa-info"></i>
-                  </span>
-                  <input
-                    type="file"
-                    name="image"
-                    id="image"
-                    onChange={(e) => {
-                      e.preventDefault();
-                      const file = e.target.files[0];
-                      setProductForm({ ...productForm, image: file });
-                      console.log(file);
-                    }}
-                  />
-                  <div class="validation"></div>
-                </div>
-
                 <div class="form-group">
                   <p>
                     Mô tả chi tiết <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-comment-o"></i>
+                    <i class="fas fa-audio-description"></i>
                   </span>
                   <input
                     type="text"
@@ -282,12 +411,13 @@ function Post() {
                   />
                   <div class="validation"></div>
                 </div>
+
                 <div class="form-group">
                   <p>
                     Địa chỉ <span>*</span>
                   </p>
                   <span class="icon-case">
-                    <i class="fa fa-comment-o"></i>
+                    <i class="fas fa-map-pin"></i>
                   </span>
                   <input
                     type="text"
@@ -298,102 +428,46 @@ function Post() {
                   />
                   <div class="validation"></div>
                 </div>
-
-                {/* <div class="form-group">
-                <p>
-                  Message <span>*</span>
-                </p>
-                <span class="icon-case">
-                  <i class="fa fa-comments-o"></i>
-                </span>
-                <textarea
-                  name="message"
-                  rows="14"
-                  data-rule="required"
-                  data-msg="Vérifiez votre saisie sur les champs : Le champ 'Message' doit être renseigné."
-                ></textarea>
-                <div class="validation"></div>
-              </div> */}
+              </div>
+              <div className="row">
+                <div className="row center">
+                  <h3 style={{ color: "red" }}>Danh sách hình ảnh</h3>
+                  <ImgCrop>
+                    <Upload
+                      {...props}
+                      onRemove={(file) => {
+                        onRemoveImage(file);
+                        return { ...props };
+                      }}
+                      listType="picture-card"
+                      fileList={fileList}
+                      onChange={onChange}
+                      onPreview={onPreview}
+                    >
+                      {fileList.length < 5 && "+ Upload"}
+                    </Upload>
+                  </ImgCrop>
+                  {images.length > 0 && images.map()}
+                </div>
+              </div>
+            </div>
+            <div className="row" style={{ width: "100%" }}>
+              <div className="row center" style={{ width: "100%" }}>
+                <iframe
+                  title="ggmap"
+                  src={`https://maps.google.com/maps?q=${lat},${lng}&output=embed`}
+                  className="ggmap"
+                  height="600"
+                  width="100%"
+                ></iframe>
               </div>
             </div>
             <button onClick={handleCreate} class="bouton-contact">
-              Đăng Bài
+              Đăng Bài{lat},{lng}
             </button>
           </form>
-        </div>
-      </div>
-      <div className="row" style={{ width: "100%" }}>
-        <div className="row center">
-          <div id="googleMaps">
-            <PlacesAutocomplete
-              value={address}
-              onChange={handleChange}
-              onSelect={handleSelect}
-            >
-              {({
-                getInputProps,
-                suggestions,
-                getSuggestionItemProps,
-                loading,
-              }) => (
-                <div>
-                  <input
-                    {...getInputProps({
-                      placeholder: "Search Places ...",
-                      className: "location-search-input",
-                    })}
-                  />
-                  <div className="autocomplete-dropdown-container">
-                    {loading && <div>Loading...</div>}
-                    {suggestions.map((suggestion) => {
-                      const className = suggestion.active
-                        ? "suggestion-item--active"
-                        : "suggestion-item";
-                      // inline style for demonstration purpose
-                      const style = suggestion.active
-                        ? { backgroundColor: "#fafafa", cursor: "pointer" }
-                        : { backgroundColor: "#ffffff", cursor: "pointer" };
-                      return (
-                        <div
-                          {...getSuggestionItemProps(suggestion, {
-                            className,
-                            style,
-                          })}
-                        >
-                          <span>{suggestion.description}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </PlacesAutocomplete>
-            <Map
-              google={window.google}
-              apiKey={"AIzaSyDnMQ1A8AKcQcbuAsiZWVaSt1j_MyB6kCs"}
-              initialCenter={{
-                lat: mapCenter.lat,
-                lng: mapCenter.lng,
-              }}
-              center={{
-                lat: mapCenter.lat,
-                lng: mapCenter.lng,
-              }}
-            >
-              <Marker
-                position={{
-                  lat: mapCenter.lat,
-                  lng: mapCenter.lng,
-                }}
-              />
-            </Map>
-          </div>
         </div>
       </div>
     </div>
   );
 }
-
-export default GoogleApiWrapper({
-  apiKey: "AIzaSyDnMQ1A8AKcQcbuAsiZWVaSt1j_MyB6kCs",
-})(Post);

@@ -1,4 +1,8 @@
 import React from "react";
+import Icon1 from "../../assets/icon-1.svg";
+import Icon2 from "../../assets/icon-2.svg";
+import Icon3 from "../../assets/icon-3.svg";
+
 
 export default function Contact() {
   return (
@@ -10,21 +14,21 @@ export default function Contact() {
 
         <div class="icons-container">
           <div class="icons">
-            <img src="images/icon-1.png" alt="" />
+            <img src={Icon1} alt='icon'/>
             <h3>Số Điện Thoại</h3>
             <p>+0981074090</p>
             <p>+0999999999</p>
           </div>
 
           <div class="icons">
-            <img src="images/icon-2.png" alt="" />
+            <img src={Icon2} alt='icon'/>
             <h3>Địa Chỉ Email</h3>
             <p>Locdev2000@gmail.com</p>
             <p>Phatgngu@gmail.com</p>
           </div>
 
           <div class="icons">
-            <img src="images/icon-3.png" alt="" />
+            <img src={Icon3} alt='icon'/>
             <h3>Địa Chỉ Văn Phòng</h3>
             <p>12 Nguyễn Văn Bảo, Phường 5, Quận Gò Vấp, TP.HCM</p>
           </div>

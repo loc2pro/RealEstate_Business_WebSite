@@ -1,6 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { BrowserRouter, Link, Route } from 'react-router-dom';
+import ChatBox from '../ChatBox';
 
 export default function Footer() {
+  const userSignin = useSelector((state) => state.userSignin);
+  const { userInfo } = userSignin;
   return (
     <div>
       <section class="footer">
@@ -42,6 +47,7 @@ export default function Footer() {
           </div>
 
           <div class="credit">
+          {userInfo && !userInfo.isAdmin && <ChatBox userInfo={userInfo} />}
             created by <span>  PhatLoc </span> | all rights reserved
           </div>
         </div>

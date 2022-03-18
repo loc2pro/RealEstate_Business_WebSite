@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Carousel } from "react-responsive-carousel";
 import { detailsProduct } from "../actions/productActions";
-import { userProduct } from "../actions/productActions";
+import urlImages from "../api/url";
 import LoadingBox from "../components/LoadingBox";
 import MessageBox from "../components/MessageBox";
-import Rating from "../components/Rating";
-import { Carousel } from "react-responsive-carousel";
-import dayjs from "dayjs";
 export default function ProductScreen(props) {
   const dispatch = useDispatch();
   const productId = props.match.params.id;
@@ -16,9 +14,10 @@ export default function ProductScreen(props) {
 
   useEffect(() => {
     dispatch(detailsProduct(productId));
+    console.log(productId);
   }, [dispatch, productId]);
   const addTocartHandler = () => {
-    props.history.push(`/cart/${productId}}`);
+    props.history.push(`/cart/${productId}`);
   };
 
   return (
@@ -35,18 +34,12 @@ export default function ProductScreen(props) {
             <div className="row center" style={{ width: "100%" }}>
               <div className="details-slider" style={{ width: "90%" }}>
                 <Carousel className="main-slider">
-                  <div>
-                    <img src={product.product.image} />
-                    <p className="legend">Bất Động Sản Phát Lộc</p>
-                  </div>
-                  <div>
-                    <img src={product.product.image} />
-                    <p className="legend">Bất Động Sản Phát Lộc</p>
-                  </div>
-                  <div>
-                    <img src={product.product.image} />
-                    <p className="legend">Bất Động Sản Phát Lộc</p>
-                  </div>
+                  {product?.product.image.map((item) => (
+                    <div>
+                      <img src={`${urlImages}${item}`} />
+                      <p className="legend">Bất Động Sản Phát Lộc</p>
+                    </div>
+                  ))}
                 </Carousel>
               </div>
             </div>
@@ -57,9 +50,16 @@ export default function ProductScreen(props) {
                     className="row"
                     style={{ borderBottom: "1px solid black" }}
                   >
-                    <h2 style={{ color: "red", fontSize: "30px" }}>
-                      {product.product.name}
-                    </h2>
+                    <div className="row center">
+                      <h2
+                        style={{
+                          color: "red",
+                          fontSize: "30px",
+                        }}
+                      >
+                        {product.product.name}
+                      </h2>
+                    </div>
                   </div>
                   <div className="row">
                     <div className="col-6">
@@ -149,13 +149,7 @@ export default function ProductScreen(props) {
                     </div>
                   </div>
                   <div className="row">
-                    <ul>
-                      <li style={{ marginTop: "1rem" }}>
-                        <Rating
-                          rating={product.product.rating}
-                          numReviews={product.product.numReviews}
-                        ></Rating>
-                      </li>
+                    <ul style={{ width: "100%" }}>
                       <li style={{ marginTop: "1rem" }}>
                         <span style={{ fontSize: "15px", fontWeight: "bold" }}>
                           <span>&#10004;</span> Mô tả chi tiết: &nbsp;
@@ -165,27 +159,27 @@ export default function ProductScreen(props) {
 
                       <div className="row">
                         <div className="col-4">
-                          <h3>
+                          <h4>
                             Diện tích: &nbsp;
                             <i class="fas fa-expand">
                               {product.product.acreage}
                             </i>
                             &nbsp;m<sup>2</sup>
-                          </h3>
+                          </h4>
                         </div>
                         <div className="col-4">
-                          <h3>
+                          <h4>
                             Phòng ngủ: &nbsp;
                             <i class="fas fa-bed">{product.product.bedroom}</i>
                             &nbsp;
-                          </h3>
+                          </h4>
                         </div>
                         <div className="col-4">
-                          <h3>
+                          <h4>
                             Nhà vệ sinh: &nbsp;
                             <i class="fas fa-bath">{product.product.toilet}</i>
                             &nbsp;
-                          </h3>
+                          </h4>
                         </div>
                       </div>
                     </ul>
@@ -252,13 +246,19 @@ export default function ProductScreen(props) {
                     </ul>
                   </div>
                 </div>
-                <div
-                  className="row"
-                  style={{ marginTop:"2rem" }}
-                >
-                  <h2 style={{ color: "blue", fontSize: "30px" }}>
-                    Vị trí
-                  </h2>
+                <div className="row" style={{ marginTop: "2rem" }}>
+                  <h2 style={{ color: "blue", fontSize: "30px" }}>Vị trí</h2>
+                </div>
+                <div className="row" style={{ width: "100%" }}>
+                  <div className="row center" style={{ width: "100%" }}>
+                    <iframe
+                      title="ggmap"
+                      src={`https://maps.google.com/maps?q=${product.product.lat},${product.product.lng}&output=embed`}
+                      className="ggmap"
+                      height="600"
+                      width="100%"
+                    ></iframe>
+                  </div>
                 </div>
               </div>
             </div>

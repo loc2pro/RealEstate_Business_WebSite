@@ -17,6 +17,58 @@ const s3 = new AWS.S3({
 });
 
 productRouter.get(
+  "/product",
+  expressAsyncHandler(async (req, res) => {
+    const pageSize = 99999999999999999;
+    const page = Number(req.query.pageNumber) || 1;
+    const name = req.query.name || "";
+    const type = req.query.type || "";
+    const order = req.query.order || "";
+    console.log("name", name);
+    console.log(type);
+    console.log(order);
+    console.log(page);
+    const min =
+      req.query.min && Number(req.query.min) !== 0 ? Number(req.query.min) : 0;
+    const max =
+      req.query.max && Number(req.query.max) !== 0 ? Number(req.query.max) : 0;
+
+    const nameFilter = name ? { name: { $regex: name, $options: "i" } } : {};
+    const typeFilter = type ? { type } : {};
+    const priceFilter = min && max ? { price: { $gte: min, $lte: max } } : {};
+    const sortOrder =
+      order === "lowest"
+        ? { price: 1 }
+        : order === "highest"
+        ? { price: -1 }
+        : order === "toprated"
+        ? { rating: -1 }
+        : { _id: -1 };
+    const count = await Product.count({
+      ...nameFilter,
+      ...typeFilter,
+      ...priceFilter,
+    });
+    const products = await Product.find({
+      ...nameFilter,
+      ...typeFilter,
+      ...priceFilter,
+    })
+      .sort(sortOrder)
+      .skip(pageSize * (page - 1))
+      .limit(pageSize);
+    res.send({ products, page, pages: Math.ceil(count / pageSize) });
+  })
+);
+
+productRouter.get(
+  "/categories",
+  expressAsyncHandler(async (req, res) => {
+    const categories = await Product.find().distinct("type");
+    res.send(categories);
+  })
+);
+productRouter.get(
   "/",
   expressAsyncHandler(async (req, res) => {
     const products = await Product.find({});
@@ -52,11 +104,6 @@ productRouter.get(
       .catch((err) => {
         res.status(400).send({ err, message: "Product not found" });
       });
-    // if (product) {
-    //   res.send(product);
-    // } else {
-    //   res.status(400).send({ message: "Product not found" });
-    // }
   })
 );
 
@@ -76,19 +123,10 @@ productRouter.post(
       bedroom,
       toilet,
       countInStock,
+      lat,
+      lng,
+      image ,
     } = req.body;
-    const file = req.file;
-    let myFile = req.file.originalname.split(".");
-    const fileTyle = myFile[myFile.length - 1];
-    console.log(file);
-    console.log("first", myFile);
-
-    const params = {
-      Bucket: "nguyenhuuloc-sinhvien-iuh",
-      Key: `${uuidv4()}.${fileTyle}`,
-      Body: req.file.buffer,
-      ContentType: "image/png",
-    };
     await Product.insertMany({
       name: name,
       user: user,
@@ -101,27 +139,19 @@ productRouter.post(
       bedroom: bedroom,
       toilet: toilet,
       countInStock: countInStock,
-      image: params.Key,
+      image: image,
+      lat: lat,
+      lng: lng,
     })
       .then(async (result) => {
-        s3.upload(params, upload.fields([]), (error, data) => {
-          if (error) {
-            console.log(error.message);
-            return res.status(400).json({
-              success: false,
-              message: "Upload hình sản phẩm thất bại",
-            });
-          }
-          return res.status(200).json({
-            success: true,
-            message: `Đăng tin sản phẩm ${name} thành công`,
-            result,
-          });
+        return res.status(200).json({
+          success: true,
+          message: `Đăng tin sản phẩm ${name} thành công`,
+          result,
         });
       })
       .catch((err) => {
-        console.log(err.message);
-        return res.status(400).json({
+        return res.json({
           success: false,
           message: `Đăng tin sản phẩm ${name} thất bại`,
           err,

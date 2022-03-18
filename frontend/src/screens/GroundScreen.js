@@ -1,22 +1,23 @@
 import React, { useEffect } from "react";
-
+import { useDispatch, useSelector } from "react-redux";
+import { useHistory } from "react-router-dom";
+import { listGrounds } from "../actions/groundActions";
+import Ground from "../components/Ground";
 import LoadingBox from "../components/LoadingBox";
 import MessageBox from "../components/MessageBox";
-import { useDispatch, useSelector } from "react-redux";
-import { listProducts } from "../actions/productActions";
-import Search from "../components/Layout/Search";
-import Employee from "../components/Layout/Employee";
-import Contact from "../components/Layout/Contact";
-import Service from "../components/Service";
 
-export default function ServiceScreen() {
+export default function GroundScreen() {
   const dispatch = useDispatch();
-  const productList = useSelector((state) => state.productList);
-  const { loading, error, products } = productList;
+  const history = useHistory();
+  const groundList = useSelector((state) => state.groundList);
+  const { loading, error, grounds } = groundList;
 
   useEffect(() => {
-    dispatch(listProducts());
+    dispatch(listGrounds());
   }, [dispatch]);
+  const handlePostGround = () => {
+    history.push("/postGround");
+  };
   return (
     <div>
       {loading ? (
@@ -30,13 +31,13 @@ export default function ServiceScreen() {
               <span>Bất Động Sản</span> Đặc Trưng
             </h1>
           </div>
-
+          <button onClick={handlePostGround}>Đăng tin</button>
           <div className="row center">
             <div className="row">
               <div className="col-4">Phân Loại Tìm Kiếm</div>
               <div className="col-8">
-                {products.map((product) => (
-                  <Service key={product._id} product={product}></Service>
+                {grounds.map((ground) => (
+                  <Ground key={ground._id} ground={ground}></Ground>
                 ))}
               </div>
             </div>
