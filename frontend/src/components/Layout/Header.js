@@ -1,17 +1,22 @@
 import React from "react";
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Link, Router } from "react-router-dom";
+import { Link, Router, useHistory } from "react-router-dom";
 import { signout } from "../../actions/userActions";
 import LoadingBox from "../LoadingBox";
 import MessageBox from "../MessageBox";
+import { Drawer, Button } from "antd";
+import { MenuOutlined } from "@ant-design/icons";
 
-function Header() {
+function Header(props) {
+  const history = useHistory();
   const [sidebarIsOpen, setSidebarIsOpen] = useState(false);
   const userSignin = useSelector((state) => state.userSignin);
   const { userInfo } = userSignin;
   const cart = useSelector((state) => state.cart);
   const { cartItems } = cart;
+
+  const [visible, setVisible] = useState(false);
 
   const productCategoryList = useSelector((state) => state.productCategoryList);
   const {
@@ -20,9 +25,25 @@ function Header() {
     categories,
   } = productCategoryList;
 
+  const groundCategoryList = useSelector((state) => state.groundCategoryList);
+  const {
+    loading: loadingGroundCategories,
+    error: errorGroundCategories,
+    categories: groundCategories,
+  } = groundCategoryList;
+
   const dispatch = useDispatch();
   const signoutHandler = () => {
     dispatch(signout());
+    history.push("/signin");
+  };
+
+  const showDrawer = () => {
+    setVisible(true);
+  };
+
+  const onClose = () => {
+    setVisible(false);
   };
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -39,17 +60,17 @@ function Header() {
       menu.classList.remove("fa-times");
     };
   });
+
   return (
-    <div>
-      <header className="row">
-        <button
-          style={{ width: "50px" }}
-          type="button"
-          className="open-sidebar"
-          onClick={() => setSidebarIsOpen(true)}
-        >
-          <i className="fa fa-bars"></i>
-        </button>
+    <div className="header">
+      <div className="row">
+        <Button
+          className="menu"
+          type="primary"
+          icon={<MenuOutlined />}
+          onClick={() => setVisible(true)}
+          style={{ width: "5rem", height: "4.5rem" }}
+        />
         <a href="/" class="logo">
           <span>Bất Động Sản</span>Phát Lộc
         </a>
@@ -57,11 +78,11 @@ function Header() {
         <nav class="navbar">
           <a href="/">Trang Chủ</a>
           <a href="#services">Dịch Vụ</a>
-          <a href="/map">Chung Cư</a>
-          <a href="#">Nhà Ở</a>
+          <a href="/service">Chung Cư</a>
+          <a href="/service">Nhà Ở</a>
           <a href="/ground">Đất Nền</a>
-          <a href="/post">Đăng Tin</a>
-          <a href="#contact">Liên Hệ</a>
+          {userInfo && <a href="/post">Đăng Tin</a>}
+          <a href="/map">Liên Hệ</a>
         </nav>
 
         <div class="icons">
@@ -93,8 +114,13 @@ function Header() {
                     </a>
                   </li>
                   <li>
+                    <a href="/postHistory" style={{ fontSize: "20px" }}>
+                      Bài đăng
+                    </a>
+                  </li>
+                  <li>
                     <a
-                      href="#signout"
+                      href="/signin"
                       onClick={signoutHandler}
                       style={{ fontSize: "20px" }}
                     >
@@ -116,10 +142,16 @@ function Header() {
               </Link>
               <ul className="dropdown-content">
                 <li>
-                  <Link to="/productlist/seller">Products</Link>
+                  <Link to="/seller/listproduct">Sản phẩm</Link>
                 </li>
                 <li>
-                  <Link to="/orderlist/seller">Orders</Link>
+                  <Link to="/orderlist/seller">Hóa đơn</Link>
+                </li>
+                <li>
+                  <Link to="/orderlist/seller">Thưởng hoa hồng</Link>
+                </li>
+                <li>
+                  <Link to="/seller/support">Hổ trợ khách hàng</Link>
                 </li>
               </ul>
             </div>
@@ -131,11 +163,18 @@ function Header() {
               </Link>
               <ul className="dropdown-content">
                 <li>
-                  <Link to="/dashboard">Dashboard</Link>
+                  <Link to="/dashboard">Thống kê</Link>
                 </li>
                 <li>
-                  <Link to="/productlist">Products</Link>
+                  <Link to="/admin/listproduct">Sản phẩm</Link>
                 </li>
+                <li>
+                  <Link to="/admin/browse">Duyệt bài</Link>
+                </li>
+                <li>
+                  <Link to="/admin/assignment">Phân công</Link>
+                </li>
+
                 <li>
                   <Link to="/orderlist">Orders</Link>
                 </li>
@@ -149,37 +188,47 @@ function Header() {
             </div>
           )}
         </div>
-      </header>
-      <aside className={sidebarIsOpen ? "open" : ""}>
-        <ul className="categories">
-          <li>
-            <strong>Loại Tài Sản</strong>
-            <button
-              onClick={() => setSidebarIsOpen(false)}
-              className="close-sidebar"
-              type="button"
-            >
-              <i class="fas fa-times-circle"></i>
-            </button>
-          </li>
-          {loadingCategories ? (
-            <LoadingBox></LoadingBox>
-          ) : errorCategories ? (
-            <MessageBox variant="danger">{errorCategories}</MessageBox>
-          ) : (
-            categories.map((c) => (
-              <li key={c}>
-                <Link
-                  to={`/search/type/${c}`}
-                  onClick={() => setSidebarIsOpen(false)}
-                >
-                  {c}
-                </Link>
-              </li>
-            ))
-          )}
-        </ul>
-      </aside>
+      </div>
+      <Drawer
+        title="Loại tài sản"
+        placement="left"
+        width={window.innerWidth > 1200 ? 350 : "auto"}
+        onClose={onClose}
+        visible={visible}
+      >
+        {loadingCategories ? (
+          <LoadingBox></LoadingBox>
+        ) : errorCategories ? (
+          <MessageBox variant="danger">{errorCategories}</MessageBox>
+        ) : (
+          categories.map((c) => (
+            <li key={c}>
+              <Link
+                to={`/search/type/${c}`}
+                onClick={() => setSidebarIsOpen(false)}
+              >
+                {c}
+              </Link>
+            </li>
+          ))
+        )}
+        {loadingGroundCategories ? (
+          <LoadingBox></LoadingBox>
+        ) : errorGroundCategories ? (
+          <MessageBox variant="danger">{errorCategories}</MessageBox>
+        ) : (
+          groundCategories.map((c) => (
+            <li key={c}>
+              <Link
+                to={`/searchground/type/${c}`}
+                onClick={() => setSidebarIsOpen(false)}
+              >
+                {c}
+              </Link>
+            </li>
+          ))
+        )}
+      </Drawer>
     </div>
   );
 }

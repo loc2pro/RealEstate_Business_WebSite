@@ -1,49 +1,253 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useHistory } from "react-router-dom";
-import { listGrounds } from "../actions/groundActions";
+import { Link, Route, useHistory, useParams } from "react-router-dom";
+import { listGroundss } from "../actions/groundActions";
 import Ground from "../components/Ground";
+import NotFind from "../components/Layout/NotFind";
 import LoadingBox from "../components/LoadingBox";
 import MessageBox from "../components/MessageBox";
+import SearchBox from "../components/SearchBox";
+import SearchGroundBox from "../components/SearchGroundBox";
+import { prices } from "../utils";
 
-export default function GroundScreen() {
+export default function GroundScreen(props) {
   const dispatch = useDispatch();
   const history = useHistory();
-  const groundList = useSelector((state) => state.groundList);
-  const { loading, error, grounds } = groundList;
+  const listGround = useSelector((state) => state.listGround);
+  const { loading, error, grounds, page, pages } = listGround;
+
+  const groundCategoryList = useSelector((state) => state.groundCategoryList);
+  const {
+    loading: loadingCategories,
+    error: errorCategories,
+    categories,
+  } = groundCategoryList;
+
+  const {
+    name = "all",
+    type = "all",
+    min = 0,
+    max = 0,
+    order = "newest",
+    pageNumber = 1,
+  } = useParams();
 
   useEffect(() => {
-    dispatch(listGrounds());
-  }, [dispatch]);
-  const handlePostGround = () => {
-    history.push("/postGround");
+    dispatch(
+      listGroundss({
+        pageNumber,
+        name: name !== "all" ? name : "",
+        type: type !== "all" ? type : "",
+        min,
+        max,
+        order,
+      })
+    );
+  }, [type, dispatch, max, min, name, order, pageNumber]);
+
+  const getFilterUrl = (filter) => {
+    const filterPage = filter.page || pageNumber;
+    const filterType = filter.type || type;
+    const filterName = filter.name || name;
+    const sortOrder = filter.order || order;
+    const filterMin = filter.min ? filter.min : filter.min === 0 ? 0 : min;
+    const filterMax = filter.max ? filter.max : filter.max === 0 ? 0 : max;
+    return `/searchground/type/${filterType}/name/${filterName}/min/${filterMin}/max/${filterMax}/order/${sortOrder}/pageNumber/${filterPage}`;
   };
   return (
     <div>
-      {loading ? (
-        <LoadingBox></LoadingBox>
-      ) : error ? (
-        <MessageBox variant="danger">{error}</MessageBox>
-      ) : (
-        <div>
-          <div class="featured" id="featured">
-            <h1 class="heading">
-              <span>Bất Động Sản</span> Đặc Trưng
+      <div className="row" style={{ marginTop: "10rem" }}>
+        {loading ? (
+          <LoadingBox></LoadingBox>
+        ) : error ? (
+          <MessageBox variant="danger">{error}</MessageBox>
+        ) : (
+          <div style={{ width: "100%" }}>
+            {/* <h3>{grounds.length} Kết Quả:</h3> */}
+            <h1
+              class="heading"
+              style={{ fontSize: "3rem", paddingBottom: "1rem" }}
+            >
+              <span>Bất Động Sản</span> Đất nền/ Đất thổ cư/ Đất nông nghiệp
             </h1>
-          </div>
-          <button onClick={handlePostGround}>Đăng tin</button>
-          <div className="row center">
-            <div className="row">
-              <div className="col-4">Phân Loại Tìm Kiếm</div>
-              <div className="col-8">
-                {grounds.map((ground) => (
-                  <Ground key={ground._id} ground={ground}></Ground>
-                ))}
+            <div className="row top" style={{ width: "100%" }}>
+              <div
+                className="col-2"
+                style={{ backgroundColor: "#eee6ff", height: "1000px" }}
+              >
+                <div className="row" style={{ width: "100%" }}>
+                  <div style={{ width: "100%" }}>
+                    <div className="container">
+                      <h2
+                        style={{
+                          color: "red",
+                          borderBottom: "2px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        Danh Mục
+                      </h2>
+                      {loadingCategories ? (
+                        <LoadingBox></LoadingBox>
+                      ) : errorCategories ? (
+                        <MessageBox variant="danger">
+                          {errorCategories}
+                        </MessageBox>
+                      ) : (
+                        <ul style={{ fontSize: "25px", marginLeft: "20px" }}>
+                          <Link
+                            className={"all" === type ? "active" : ""}
+                            to={getFilterUrl({ type: "all" })}
+                          >
+                            <li>
+                              <span>
+                                <i class="fas fa-border-all"></i>
+                              </span>
+                              Tất Cả
+                            </li>
+                          </Link>
+                          {categories.map((c) => (
+                            <Link
+                              className={c === type ? "active" : ""}
+                              to={getFilterUrl({ type: c })}
+                            >
+                              <li key={c}>
+                                <span>
+                                  <i class="fas fa-angle-double-right"></i>
+                                </span>
+
+                                {c}
+                              </li>
+                            </Link>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="row" style={{ marginTop: "10rem" }}>
+                  <div className="container" style={{ width: "100%" }}>
+                    <h2
+                      style={{
+                        color: "red",
+                        borderBottom: "2px solid black",
+                        textAlign: "center",
+                      }}
+                    >
+                      tìm kiếm theo giá
+                    </h2>
+                    <ul style={{ fontSize: "25px", marginLeft: "20px" }}>
+                      {prices.map((p) => (
+                        <Link
+                          to={getFilterUrl({ min: p.min, max: p.max })}
+                          className={
+                            `${p.min}-${p.max}` === `${min}-${max}`
+                              ? "active"
+                              : ""
+                          }
+                        >
+                          <li key={p.name}>
+                            <span>
+                              <i class="fas fa-angle-double-right"></i>
+                            </span>
+                            {p.name}
+                          </li>
+                        </Link>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="col-10"
+                style={{
+                  overflowY: "scroll",
+                  height: "1000px",
+                  backgroundColor: "#F8F8FF",
+                }}
+              >
+                {loading ? (
+                  <LoadingBox></LoadingBox>
+                ) : error ? (
+                  <MessageBox variant="danger">{error}</MessageBox>
+                ) : (
+                  <>
+                    <div
+                      className="row"
+                      style={{
+                        width: "100%",
+                        backgroundColor: "#2a2f35",
+                        borderTopLeftRadius: "10px",
+                        borderTopRightRadius: "10px",
+                        height: "60px",
+                      }}
+                    >
+                      <div className="col-1" style={{ padding: "1rem" }}>
+                        <span style={{ color: "white" }}>
+                          Kết Quả: {grounds.length}
+                        </span>
+                      </div>
+                      <div className="col-7">
+                        <Route
+                          render={({ history }) => (
+                            <SearchGroundBox
+                              history={history}
+                            ></SearchGroundBox>
+                          )}
+                        ></Route>
+                      </div>
+                      <div className="col-4">
+                        <span style={{ fontSize: "20px", color: "red" }}>
+                          Tìm theo:
+                        </span>
+                        <select
+                          style={{
+                            height: "30px",
+                            width: "220px",
+                            fontSize: "20px",
+                            marginRight: "2rem",
+                            border: "solid 1px gray",
+                            margin: "2rem",
+                          }}
+                          value={order}
+                          onChange={(e) => {
+                            props.history.push(
+                              getFilterUrl({ order: e.target.value })
+                            );
+                          }}
+                        >
+                          <option value="newest">Mới nhất</option>
+                          <option value="lowest">Giá: Thấp tới cao</option>
+                          <option value="highest">Giá: Cao tới thấp</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="row center">
+                      {grounds.map((ground) => (
+                        <Ground key={ground._id} ground={ground}></Ground>
+                      ))}
+                    </div>
+                    <div className="row center pagination">
+                      {[...Array(pages).keys()].map((x) => (
+                        <Link
+                          className={x + 1 === page ? "active" : ""}
+                          key={x + 1}
+                          to={getFilterUrl({ page: x + 1 })}
+                        >
+                          {x + 1}
+                        </Link>
+                      ))}
+                    </div>
+                    {grounds.length === 0 && <NotFind />}
+                  </>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
+      <div className="row"></div>
     </div>
   );
 }

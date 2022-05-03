@@ -20,12 +20,59 @@ Content-Type: application/json
       "numReviews": 10,
     "image":"../template/images/amazon.jpg"
 }
-
+// lấy product theo ID
 ###
-GET  http://localhost:5000/api/products/6228903503056d56adfb6c0b
+GET  http://localhost:5000/api/products/624a627102e4a00553df363f
 
 ###
 GET  http://localhost:5000/api/products/categories
 
+// Lấy tất cả danh sách product
 ###
-GET  http://localhost:5000/api/products/product
+GET  http://localhost:5000/api/products
+###
+Post  http://localhost:5000/api/products/postHistory
+Content-Type: application/json
+
+{
+  "userId":"6200933a189dbf4d5f3020b7"
+}
+###
+DELETE  http://localhost:5000/api/products/postHistory/623dd7928a2df3b23c58baaf
+
+###
+PUT   http://localhost:5000/api/products/postHistory/update/623df7250a0b954a6d168e7d
+Content-Type: application/json
+
+{
+  "name":"Nha Cao Tang"
+}
+
+//get danh sách bài chưa được duyệt
+###
+GET  http://localhost:5000/api/products/browse
+
+// lấy product của nhân viên seller theo ID
+###
+GET  http://localhost:5000/api/products/seller/all/6249b4e29ea02403e6aa89cd
+// lấy product của nhân viên seller theo ID chưa bán được
+###
+GET  http://localhost:5000/api/products/seller/notsold/6262bd4e54bb1cb23bff3c19
+###
+PUT   http://localhost:5000/api/products//admin/assignment
+Content-Type: application/json
+
+{
+  "productId":"[624c6f0e51cfc36425d9a7d6,624ea1e52acaae374f84552?]"
+}
+//Bán sản phẩm
+###
+Put  http://localhost:5000/api/products/seller/update/624ef216d733236a3b9fa7d2
+
+// Chi tiết sản phẩm
+###
+get  http://localhost:5000/api/products/624ef216d733236a3b9fa7d2
+
+
+###
+get  http://localhost:5000/api/products/admin/testtt

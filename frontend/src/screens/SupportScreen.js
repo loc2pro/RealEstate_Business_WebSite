@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import socketIOClient from "socket.io-client";
 import MessageBox from "../components/MessageBox";
+import Robot from "../assets/robot.gif";
+import styled from "styled-components";
 
 let allUsers = [];
 let allMessages = [];
@@ -29,14 +31,14 @@ export default function SupportScreen() {
         behavior: "smooth",
       });
     }
-
+    console.log(messages, "messages");
     if (!socket) {
       const sk = socketIOClient(ENDPOINT);
       setSocket(sk);
       sk.emit("onLogin", {
         _id: userInfo._id,
         name: userInfo.name,
-        isAdmin: userInfo.isAdmin,
+        isSeller: userInfo.isSeller,
       });
       sk.on("message", (data) => {
         if (allSelectedUser._id === data._id) {
@@ -95,7 +97,7 @@ export default function SupportScreen() {
     } else {
       allMessages = [
         ...allMessages,
-        { body: messageBody, name: userInfo.name },
+        { body: messageBody, name: userInfo.name, isSeller: true },
       ];
       setMessages(allMessages);
       setMessageBody("");
@@ -103,7 +105,7 @@ export default function SupportScreen() {
         socket.emit("onMessage", {
           body: messageBody,
           name: userInfo.name,
-          isAdmin: userInfo.isAdmin,
+          isSeller: userInfo.isSeller,
           _id: selectedUser._id,
         });
       }, 1000);
@@ -113,7 +115,7 @@ export default function SupportScreen() {
   return (
     <div
       className="row top full-container"
-      style={{ marginTop: "100px", borderTop: "1px solid black" }}
+      style={{ borderTop: "1px solid black" }}
     >
       <div className="col-4 support-users">
         {users.filter((x) => x._id !== userInfo._id).length === 0 && (
@@ -132,7 +134,9 @@ export default function SupportScreen() {
                   type="button"
                   onClick={() => selectUser(user)}
                 >
-                  <strong style={{fontWeight:"bold",fontSize:"20px"}}>{user.name}</strong>
+                  <strong style={{ fontWeight: "bold", fontSize: "20px" }}>
+                    {user.name}
+                  </strong>
                 </button>
                 <span
                   className={
@@ -154,12 +158,36 @@ export default function SupportScreen() {
               </strong>
             </div>
             <ul ref={uiMessagesRef}>
-              {messages.length === 0 && <li>Không tin nhắn.</li>}
-              {messages.map((msg, index) => (
+              <Container>
+                {messages.length === 0 && (
+                  <li>
+                    <img src={Robot} alt="" />
+                  </li>
+                )}
+                <div className="chat-messages">
+                  {messages.map((message) => {
+                    return (
+                      <div>
+                        <div
+                          className={`message ${
+                            message.isSeller ? "sended" : "recieved"
+                          }`}
+                        >
+                          <div className="content ">
+                            <p style={{ fontSize: "17px" }}>{message.body}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Container>
+
+              {/* {messages.map((msg, index) => (
                 <li key={index}>
                   <strong>{`${msg.name}: `}</strong> {msg.body}
                 </li>
-              ))}
+              ))} */}
             </ul>
             <div>
               <form onSubmit={submitHandler} className="row">
@@ -170,7 +198,7 @@ export default function SupportScreen() {
                   placeholder=" Tin nhắn"
                 />
                 <button
-                  style={{ width: "8rem", height: "100px",fontWeight:"bold" }}
+                  style={{ width: "8rem", height: "100px", fontWeight: "bold" }}
                   type="submit"
                 >
                   Gữi
@@ -183,3 +211,74 @@ export default function SupportScreen() {
     </div>
   );
 }
+const Container = styled.div`
+  grid-template-rows: 10% 80% 10%;
+  gap: 0.1rem;
+  overflow: hidden;
+  @media screen and (min-width: 720px) and (max-width: 1080px) {
+    grid-template-rows: 15% 70% 15%;
+  }
+  .chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    .user-details {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      .avatar {
+        img {
+          height: 3rem;
+        }
+      }
+      .username {
+        h3 {
+          color: white;
+        }
+      }
+    }
+  }
+  .chat-messages {
+    padding: 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow: auto;
+    &::-webkit-scrollbar {
+      width: 0.2rem;
+      &-thumb {
+        background-color: #ffffff39;
+        width: 0.1rem;
+        border-radius: 1rem;
+      }
+    }
+    .message {
+      display: flex;
+      align-items: center;
+      .content {
+        max-width: 80%;
+        overflow-wrap: break-word;
+        padding: 1rem;
+        font-size: 1.1rem;
+        border-radius: 1rem;
+        color: #d1d1d1;
+        @media screen and (min-width: 720px) and (max-width: 1080px) {
+          max-width: 70%;
+        }
+      }
+    }
+    .sended {
+      justify-content: flex-end;
+      .content {
+        background-color: white;
+      }
+    }
+    .recieved {
+      justify-content: flex-start;
+      .content {
+        background-color: #9900ff20;
+      }
+    }
+  }
+`;

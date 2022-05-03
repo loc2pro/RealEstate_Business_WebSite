@@ -1,12 +1,17 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { addToCart, removeFromCart } from "../actions/cartActions";
+import {
+  addGroundToCart,
+  addToCart,
+  removeFromCart,
+} from "../actions/cartActions";
 import MessageBox from "../components/MessageBox";
 import urlImages from "../api/url";
 
 export default function CartScreen(props) {
   const productId = props.match.params.id;
+  const groundId = props.match.params.id;
   const qty = props.location.search
     ? Number(props.location.search.split("=")[1])
     : 1;
@@ -16,16 +21,17 @@ export default function CartScreen(props) {
   const dispatch = useDispatch();
   useEffect(() => {
     if (productId) {
-      console.log("Cart", productId);
       dispatch(addToCart(productId, qty));
     }
   }, [dispatch, productId, qty]);
-  // const checkoutHandler = () => {
-  //   // props.history.push("/signin?redirect=shipping");
-  //   props.history.push("/");
-  // };
+
+  useEffect(() => {
+    if (groundId) {
+      dispatch(addGroundToCart(groundId, qty));
+    }
+  }, [dispatch, groundId, qty]);
+
   const removeFromCartHandler = (id) => {
-    //delete action
     dispatch(removeFromCart(id));
   };
   return (
@@ -65,9 +71,16 @@ export default function CartScreen(props) {
                       className="small"
                     ></img>
                   </div>
-                  <div>
-                    <Link to={`/product/${item.product}`}>{item.name}</Link>
-                  </div>
+                  {item.type ? (
+                    <div>
+                      <Link to={`/groundDetails/${item.product}`}>{item.name}</Link>
+                    </div>
+                  ) : (
+                    <div>
+                      <Link to={`/product/${item.product}`}>{item.name}</Link>
+                    </div>
+                  )}
+
                   <div>
                     {item.price.toLocaleString("it-IT", {
                       style: "currency",

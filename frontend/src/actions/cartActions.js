@@ -22,6 +22,25 @@ export const addToCart = (productId, qty) => async (dispatch, getState) => {
   });
   localStorage.setItem("cartItems", JSON.stringify(getState().cart.cartItems));
 };
+export const addGroundToCart =
+  (groundId, qty) => async (dispatch, getState) => {
+    const { data } = await Axios.get(`${api}/api/grounds/${groundId}`);
+    dispatch({
+      type: CART_ADD_ITEM,
+      payload: {
+        name: data.ground.name,
+        image: data.ground.image,
+        price: data.ground.price,
+        product: data.ground._id,
+        type: data.ground.type,
+        qty,
+      },
+    });
+    localStorage.setItem(
+      "cartItems",
+      JSON.stringify(getState().cart.cartItems)
+    );
+  };
 
 export const removeFromCart = (productId) => (dispatch, getState) => {
   dispatch({ type: CART_REMOVE_ITEM, payload: productId });

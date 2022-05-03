@@ -1,6 +1,21 @@
 import Axios from "axios";
 import api from "../api";
 import {
+  SELLER_CREATE_FAIL,
+  SELLER_CREATE_REQUEST,
+  SELLER_CREATE_SUCCESS,
+  SELLER_DELETE_FAIL,
+  SELLER_DELETE_REQUEST,
+  SELLER_DELETE_SUCCESS,
+  SELLER_LIST_FAIL,
+  SELLER_LIST_REQUEST,
+  SELLER_LIST_SUCCESS,
+  SELLER_UPDATE_FAIL,
+  SELLER_UPDATE_REQUEST,
+  SELLER_UPDATE_SUCCESS,
+  USER_CREATE_FAIL,
+  USER_CREATE_REQUEST,
+  USER_CREATE_SUCCESS,
   USER_DELETE_FAIL,
   USER_DELETE_REQUEST,
   USER_DELETE_SUCCESS,
@@ -17,9 +32,12 @@ import {
   USER_SIGNIN_REQUEST,
   USER_SIGNIN_SUCCESS,
   USER_SIGNOUT,
+  USER_UPDATE_FAIL,
   USER_UPDATE_PROFILE_FAIL,
   USER_UPDATE_PROFILE_REQUEST,
   USER_UPDATE_PROFILE_SUCCESS,
+  USER_UPDATE_REQUEST,
+  USER_UPDATE_SUCCESS,
 } from "../constants/userConstants";
 
 export const register =
@@ -112,13 +130,14 @@ export const updateUserProfile = (user) => async (dispatch, getState) => {
     dispatch({ type: USER_UPDATE_PROFILE_FAIL, payload: message });
   }
 };
+//list user
 export const listUsers = () => async (dispatch, getState) => {
   dispatch({ type: USER_LIST_REQUEST });
   try {
     const {
       userSignin: { userInfo },
     } = getState();
-    const { data } = await Axios.get("/api/users", {
+    const { data } = await Axios.get(`${api}/api/users/admin/user`, {
       headers: {
         Authorization: `Bearer ${userInfo.token}`,
       },
@@ -132,15 +151,34 @@ export const listUsers = () => async (dispatch, getState) => {
     dispatch({ type: USER_LIST_FAIL, payload: message });
   }
 };
+// Thêm user
+export const createUserAdmin = (newUser) => async (dispatch) => {
+  dispatch({ type: USER_CREATE_REQUEST });
+  try {
+    const { data } = await Axios.post(`${api}/api/users/admin/create`, {
+      newUser,
+    });
+    if (data.success) {
+      dispatch({ type: USER_CREATE_SUCCESS, payload: data });
+    } else {
+      dispatch({ type: USER_CREATE_FAIL, message: "Tạo người dùng thất bại" });
+    }
+    return data;
+  } catch (error) {
+    dispatch({
+      type: USER_CREATE_FAIL,
+      payload:
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message,
+    });
+  }
+};
+//Xóa user
 export const deleteUser = (userId) => async (dispatch, getState) => {
   dispatch({ type: USER_DELETE_REQUEST, payload: userId });
-  const {
-    userSignin: { userInfo },
-  } = getState();
   try {
-    const { data } = await Axios.delete(`/api/users/${userId}`, {
-      headers: { Authorization: `Bearer ${userInfo.token}` },
-    });
+    const { data } = await Axios.delete(`${api}/api/users/${userId}`);
     dispatch({ type: USER_DELETE_SUCCESS, payload: data });
   } catch (error) {
     const message =
@@ -148,5 +186,102 @@ export const deleteUser = (userId) => async (dispatch, getState) => {
         ? error.response.data.message
         : error.message;
     dispatch({ type: USER_DELETE_FAIL, payload: message });
+  }
+};
+//update user
+export const updateUser = (user) => async (dispatch) => {
+  dispatch({ type: USER_UPDATE_REQUEST, payload: user });
+  try {
+    const { data } = await Axios.put(`${api}/api/users/admin/update`, user);
+    if (data.success) {
+      dispatch({ type: USER_UPDATE_SUCCESS, payload: data });
+    } else {
+      dispatch({ type: USER_UPDATE_FAIL, message: "Update Thất bại" });
+    }
+    return data;
+  } catch (error) {
+    const message =
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : error.message;
+    dispatch({ type: USER_UPDATE_FAIL, payload: message });
+  }
+};
+
+//list seller
+export const listSellers = () => async (dispatch, getState) => {
+  dispatch({ type: SELLER_LIST_REQUEST });
+  try {
+    const { data } = await Axios.get(`${api}/api/users/admin/seller`);
+    dispatch({ type: SELLER_LIST_SUCCESS, payload: data });
+  } catch (error) {
+    const message =
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : error.message;
+    dispatch({ type: SELLER_LIST_FAIL, payload: message });
+  }
+};
+// Thêm seller
+export const createSellerAdmin = (newUser, img) => async (dispatch) => {
+  dispatch({ type: SELLER_CREATE_REQUEST });
+  try {
+    const { data } = await Axios.post(`${api}/api/users/admin/createSeller`, {
+      newUser,
+      img,
+    });
+    if (data.success) {
+      dispatch({ type: SELLER_CREATE_SUCCESS, payload: data });
+    } else {
+      dispatch({
+        type: SELLER_CREATE_FAIL,
+        message: "Tạo người dùng thất bại",
+      });
+    }
+    return data;
+  } catch (error) {
+    dispatch({
+      type: SELLER_CREATE_FAIL,
+      payload:
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message,
+    });
+  }
+};
+//Xóa seller
+export const deleteSellerAdmin = (userId) => async (dispatch, getState) => {
+  dispatch({ type: SELLER_DELETE_REQUEST, payload: userId });
+  try {
+    const { data } = await Axios.delete(`${api}/api/users/seller/${userId}`);
+    dispatch({ type: SELLER_DELETE_SUCCESS, payload: data });
+  } catch (error) {
+    const message =
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : error.message;
+    dispatch({ type: SELLER_DELETE_FAIL, payload: message });
+  }
+};
+//update seller
+export const updateSellerAdmin = (user) => async (dispatch) => {
+  dispatch({ type: SELLER_UPDATE_REQUEST, payload: user });
+  try {
+    const { data } = await Axios.put(
+      `${api}/api/users/admin/updateSeller`,
+      user
+    );
+    if (data.success) {
+      dispatch({ type: SELLER_UPDATE_SUCCESS, payload: data });
+    } else {
+      dispatch({ type: SELLER_UPDATE_FAIL, message: "Update Thất bại" });
+    }
+    return data;
+  } catch (error) {
+    const message =
+      error.response && error.response.data.message
+        ? error.response.data.message
+        : error.message;
+    dispatch({ type: SELLER_UPDATE_FAIL, payload: message });
   }
 };

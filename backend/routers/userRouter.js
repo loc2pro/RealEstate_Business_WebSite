@@ -66,7 +66,9 @@ userRouter.post(
 userRouter.get(
   "/:id",
   expressAsyncHandler(async (req, res) => {
+    console.log(req.params.id);
     const user = await User.findById(req.params.id);
+
     if (user) {
       res.send(user);
     } else {
@@ -83,6 +85,8 @@ userRouter.put(
     if (user) {
       user.name = req.body.name || user.nanme;
       user.email = req.body.email || user.email;
+      user.phone = req.body.phone || user.phone;
+      user.address = req.body.address || user.address;
 
       if (req.body.password) {
         user.password = bcrypt.hashSync(req.body.password, 8);
@@ -94,7 +98,7 @@ userRouter.put(
         email: updatedUser.email,
         phone: updatedUser.phone,
         address: updatedUser.address,
-        isAdmin: updatedUser.isAdmin,
+        isSeller: user.isSeller,
         token: generateToken(updatedUser),
       });
     }
@@ -103,22 +107,41 @@ userRouter.put(
 
 userRouter.get(
   "/",
-  isAuth,
-  isAdmin,
+  // isAuth,
+  // isAdmin,
   expressAsyncHandler(async (req, res) => {
     const users = await User.find({});
     res.send(users);
   })
 );
+// Thêm user
+userRouter.post(
+  "/admin/create",
+  expressAsyncHandler(async (req, res) => {
+    const user = new User({
+      name: req.body.newUser.name,
+      email: req.body.newUser.email,
+      phone: req.body.newUser.phone,
+      address: req.body.newUser.address,
+      password: bcrypt.hashSync(req.body.newUser.password, 8),
+    });
+    const createdUser = await user.save();
+    res.send({
+      success: true,
+      message: `Thêm thành công người dùng ${createdUser.name}`,
+      user: createdUser,
+    });
+  })
+);
 
+// Xóa user
 userRouter.delete(
   "/:id",
-  isAuth,
-  isAdmin,
   expressAsyncHandler(async (req, res) => {
+    console.log("delete", req.params.id);
     const user = await User.findById(req.params.id);
     if (user) {
-      if (user.email === "admin@example.com") {
+      if (user.email === "admin@gmail.com") {
         res.status(400).send({ message: "Can Not Delete Admin User" });
         return;
       }
@@ -130,23 +153,116 @@ userRouter.delete(
   })
 );
 
+// Sửa thông tin user
 userRouter.put(
-  "/:id",
-  isAuth,
-  isAdmin,
+  "/admin/update",
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.body._id);
     if (user) {
       user.name = req.body.name || user.name;
       user.email = req.body.email || user.email;
-      user.isSeller = Boolean(req.body.isSeller);
-      user.isAdmin = Boolean(req.body.isAdmin);
-      // user.isAdmin = req.body.isAdmin || user.isAdmin;
+      user.phone = req.body.phone || user.phone;
+      user.address = req.body.address || user.address;
       const updatedUser = await user.save();
-      res.send({ message: "User Updated", user: updatedUser });
+      res.send({
+        success: true,
+        message: "Cập nhập thành công người dùng",
+        user: updatedUser,
+      });
+    } else {
+      res.status(404).send({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+  })
+);
+
+// Thêm seller
+userRouter.post(
+  "/admin/createSeller",
+  expressAsyncHandler(async (req, res) => {
+    console.log(req.body);
+    const user = new User({
+      name: req.body.newUser.name,
+      email: req.body.newUser.email,
+      phone: req.body.newUser.phone,
+      address: req.body.newUser.address,
+      password: bcrypt.hashSync(req.body.newUser.password, 8),
+      isSeller: true,
+      seller: { logo: req.body.img },
+    });
+    const createdUser = await user.save();
+    res.send({
+      success: true,
+      message: `Thêm thành công nhân viên ${createdUser.name}`,
+      user: createdUser,
+    });
+  })
+);
+
+// Xóa seller
+userRouter.delete(
+  "/seller/:id",
+  expressAsyncHandler(async (req, res) => {
+    console.log("delete", req.params.id);
+    const user = await User.findById(req.params.id);
+    if (user) {
+      if (user.email === "admin@gmail.com") {
+        res.status(400).send({ message: "Can Not Delete Admin User" });
+        return;
+      }
+      const deleteUser = await user.remove();
+      res.send({ message: "User Deleted", user: deleteUser });
     } else {
       res.status(404).send({ message: "User Not Found" });
     }
+  })
+);
+// Sửa thông tin seller
+userRouter.put(
+  "/admin/updateSeller",
+  // isAuth,
+  // isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.body._id);
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+      user.phone = req.body.phone || user.phone;
+      user.address = req.body.address || user.address;
+      user.seller.salary = req.body.seller.salary || user.seller.salary;
+      const updatedSeller = await user.save();
+      res.send({
+        success: true,
+        message: "Cập nhật thành công nhân viên",
+        user: updatedSeller,
+      });
+    } else {
+      res.status(404).send({
+        success: false,
+        message: "Không tìm thấy nhân viên",
+      });
+    }
+  })
+);
+
+userRouter.get(
+  "/admin/seller",
+  // isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const sellers = await User.find({ isSeller: true });
+    res.status(200).send(sellers);
+  })
+);
+
+userRouter.get(
+  "/admin/user",
+  // isAuth,
+  // isAdmin,
+  expressAsyncHandler(async (req, res) => {
+    const users = await User.find({ isSeller: false, isAdmin: false });
+    res.status(200).send(users);
   })
 );
 export default userRouter;

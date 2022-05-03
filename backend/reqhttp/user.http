@@ -26,4 +26,19 @@ Content-Type: application/json
    
 }
 ### get user
-Get  http://localhost:5000/api/users/
+Get  http://localhost:5000/api/users/625ff142dfbfaa9c90bee899
+
+### get seller
+Get  http://localhost:5000/api/users/admin/seller
+
+### get user
+Get  http://localhost:5000/api/users/admin/user
+
+
+### update user
+Put  http://localhost:5000/api/users/admin/update
+Content-Type: application/json
+
+{
+    "name":"Loc"
+}

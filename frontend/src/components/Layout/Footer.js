@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { BrowserRouter, Link, Route } from 'react-router-dom';
+import React from 'react';
+import { useSelector } from 'react-redux';
 import ChatBox from '../ChatBox';
 
 export default function Footer() {

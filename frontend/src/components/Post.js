@@ -1,4 +1,15 @@
-import { notification, Upload } from "antd";
+import { UserOutlined } from "@ant-design/icons";
+import {
+  Form,
+  Input,
+  Modal,
+  notification,
+  Row,
+  Select,
+  Upload,
+  message,
+  Space,
+} from "antd";
 import ImgCrop from "antd-img-crop";
 import "antd/dist/antd.css";
 import AWS from "aws-sdk";
@@ -9,8 +20,21 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { postProduct } from "../actions/productActions";
 
+const { Option } = Select;
+const { TextArea } = Input;
+const { Search } = Input;
+
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
+}
+
+function getBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
 }
 
 export default function Post() {
@@ -18,41 +42,103 @@ export default function Post() {
   const userSignin = useSelector((state) => state.userSignin);
   const { userInfo } = userSignin;
   const postProducts = useSelector((state) => state.postProducts);
-  //const { postproduct, loading } = postProducts;
+  // get Geocoding
   const [lat, setLat] = useState(10.8230989);
   const [lng, setLng] = useState(106.6296638);
-
+  //upload images
   const [fileList, setFileList] = useState([]);
   const [images, setImages] = useState([]);
-  const [toast, setToast] = useState({
-    show: false,
-    success: false,
-    message: "",
-  });
+  const [previewVisible, SetPreviewVisible] = useState(false);
+  const [previewImage, SetPreviewImage] = useState("");
+  //address
+  const [citys, setCitys] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [ward, setWard] = useState("");
+  const [address, setAddress] = useState("");
+
+  const [utilities, setUtilities] = useState([]);
+
+  function GetCitys() {
+    axios
+      .get("https://provinces.open-api.vn/api/")
+      .then((res) => {
+        setCitys(res.data);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
+  function GetDistricts(code) {
+    axios
+      .get(`https://provinces.open-api.vn/api/p/${code}?depth=2`)
+      .then((res) => {
+        setDistricts(res.data.districts);
+        setCity(res.data.name);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
+  function GetWards(code) {
+    axios
+      .get(`https://provinces.open-api.vn/api/d/${code}?depth=2`)
+      .then((res) => {
+        setWards(res.data.wards);
+        setDistrict(res.data.name);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
   useEffect(() => {
-    if (toast) {
-      setTimeout(() => {
-        setToast({ ...toast, show: false });
-      }, 6000);
-    }
-  }, [toast]);
+    GetCitys();
+  }, []);
+
+  const onSearch = (value) => {
+    axios
+      .get(
+        //9cbf0bc15d3901b7e043d8f76be8d73f370a82fe629a2d46
+        `https://maps.vietmap.vn/api/search?api-version=1.1&apikey=2f7cf1b8d4f0cce9ef2accb74b6c3cd90ac926aa78f90e4c&text=${value}`
+      )
+      .then(function (response) {
+        console.log(response);
+        setLng(response.data.data.features[0].bbox[0]);
+        setLat(response.data.data.features[0].bbox[1]);
+        console.log(response);
+      })
+      .catch(function (error) {
+        console.log(error);
+      })
+      .then(function () {});
+  };
+
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
 
-  const onPreview = async (file) => {
-    let src = file.url;
-    if (!src) {
-      src = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file.originFileObj);
-        reader.onload = () => resolve(reader.result);
-      });
+  const handleCancel = () => SetPreviewVisible(false);
+
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
     }
-    const image = new Image();
-    image.src = src;
-    const imgWindow = window.open(src);
-    imgWindow.document.write(image.outerHTML);
+    SetPreviewImage(file.url || file.preview);
+    SetPreviewVisible(true);
   };
   const props = {
     customRequest({
@@ -79,7 +165,7 @@ export default function Post() {
         Bucket: "nguyenhuuloc-sinhvien-iuh",
         Key: "locdev2000@gmail.com" + "/" + file.name,
         Body: file,
-        ContentType: file.type, // TODO: You should set content-type because AWS SDK will not automatically set file MIME
+        ContentType: file.type,
       };
 
       S3.putObject(objParams)
@@ -107,7 +193,6 @@ export default function Post() {
     AWS.config.update({
       accessKeyId: "AKIAWPLFF2RHPNOWRBHJ",
       secretAccessKey: "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",
-      //   sessionToken: ""
     });
 
     const S3 = new AWS.S3();
@@ -139,8 +224,10 @@ export default function Post() {
     bedroom: "",
     toilet: "",
     countInStock: 1,
+    legalDocuments: "",
   });
   const handleCreate = (e) => {
+    console.log(productForm.address, "address");
     e.preventDefault();
     let listImages = [];
     for (let item of fileList) {
@@ -151,15 +238,23 @@ export default function Post() {
     data.append("user", productForm.user);
     data.append("status", productForm.status);
     data.append("type", productForm.type);
-    data.append("address", productForm.address);
     data.append("description", productForm.description);
     data.append("price", productForm.price);
     data.append("acreage", productForm.acreage);
     data.append("bedroom", productForm.bedroom);
     data.append("toilet", productForm.toilet);
     data.append("countInStock", productForm.countInStock);
+    data.append("legalDocuments", productForm.legalDocuments);
+    data.append("city", city);
+    data.append("district", district);
+    data.append("ward", ward);
+    data.append("address", address);
     for (let item of listImages) {
       data.append("image", item);
+    }
+    for (let item of utilities) {
+      data.append("utilities", item);
+      console.log(item);
     }
     data.append("lat", lat);
     data.append("lng", lng);
@@ -194,10 +289,8 @@ export default function Post() {
     setProductForm({
       name: "",
       user: userInfo?._id,
-      image: null,
       status: "",
       type: "",
-      address: "",
       description: "",
       price: "",
       acreage: "",
@@ -206,268 +299,575 @@ export default function Post() {
       countInStock: 1,
     });
     setFileList([]);
+    var options = document.querySelectorAll("#my_select option");
+    for (var i = 0, l = options.length; i < l; i++) {
+      options[i].selected = options[i].defaultSelected;
+    }
   };
 
   const handleChangedInput = (e) => {
-    setProductForm({ ...productForm, [e.target.name]: e.target.value });
+    console.log(e);
+    setProductForm({
+      ...productForm,
+      [e.target.name]: e.target.value,
+    });
   };
-
-  useEffect(() => {
-    if (productForm?.address) {
-      axios
-        .get(
-          //9cbf0bc15d3901b7e043d8f76be8d73f370a82fe629a2d46
-          `https://maps.vietmap.vn/api/search?api-version=1.1&apikey=2f7cf1b8d4f0cce9ef2accb74b6c3cd90ac926aa78f90e4c&text=${productForm?.address}`
-        )
-        .then(function (response) {
-          console.log(response);
-          setLng(response.data.data.features[0].bbox[0]);
-          setLat(response.data.data.features[0].bbox[1]);
-          console.log(response);
-        })
-        .catch(function (error) {
-          console.log(error);
-        })
-        .then(function () {});
-    }
-  }, [productForm.address]);
+  function handleChange(value) {
+    setUtilities(value);
+  }
 
   return (
-    <div>
-      <div className="row" style={{ width: "100%" }}>
-        <div className="row center" style={{ width: "100%" }}>
-          <form enctype="multipart/form-data" style={{ width: "80%" }}>
-            <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
-              <span> Đăng Bài</span>
-            </h1>
-
-            <div class="contentform">
-              <div class="leftcontact">
-                <div class="form-group">
-                  <p>
-                    Tên Tài Sản<span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-home"></i>
-                  </span>
-                  <input
-                    type="text"
+    <>
+      <Row>
+        <Form enctype="multipart/form-data" style={{ width: "100%" }}>
+          <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
+            <span> Đăng Bài</span>
+            <a> Nhà ở/ Chung cư</a>
+          </h1>
+          <div class="contentform">
+            <h3
+              class="title_sticky"
+              style={{ fontWeight: "bold", fontSize: "30px", color: "red" }}
+            >
+              Thông tin sản phẩm
+            </h3>
+            <div class="leftcontact">
+              <div class="form-group">
+                <h3 class="title_sticky">Tên sản phẩm:</h3>
+                <Form
+                  name="basic"
+                  wrapperCol={{ span: 35 }}
+                  initialValues={{ remember: true }}
+                  autoComplete="off"
+                >
+                  <Form.Item
                     name="name"
-                    id="name"
-                    value={productForm.name}
-                    onChange={handleChangedInput}
-                    data-rule="required"
-                  />
-                  <div class="validation"></div>
-                </div>
-
-                <div class="form-group">
-                  <p>
-                    Loại <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-align-center"></i>
-                  </span>
-                  <select
-                    name="type"
-                    onChange={handleChangedInput}
-                    style={{
-                      width: "94%",
-                      float: "right",
-                      marginTop: "5px",
-                      textAlign: "center",
-                    }}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Tên sản phẩm không được bỏ trống",
+                      },
+                    ]}
                   >
-                    <option value="0">--- Lựa chọn ---</option>
-                    <option value="Nhà">Nhà</option>
-                    <option value="Chung cư">Chung cư</option>
-                  </select>
-                  <div class="validation"></div>
-                </div>
+                    <Input
+                      maxLength={60}
+                      onChange={handleChangedInput}
+                      value={productForm.name}
+                      name="name"
+                      size="large"
+                      placeholder="Tên sản phẩm"
+                      prefix={<UserOutlined />}
+                    />
+                  </Form.Item>
+                </Form>
+              </div>
 
-                <div class="form-group">
-                  <p>
-                    Trạng Thái <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-exclamation"></i>
-                  </span>
-                  <select
-                    name="status"
+              <div class="form-group">
+                <h3 class="title_sticky">Loại sản phẩm:</h3>
+                <select
+                  name="type"
+                  onChange={handleChangedInput}
+                  id="my_select"
+                >
+                  <option selected="selected" value="0">
+                    --- Lựa chọn ---
+                  </option>
+                  <option value="Nhà riêng">Nhà riêng</option>
+                  <option value="Nhà mặt phố">Nhà mặt phố</option>
+                  <option value="Biệt thự">Biệt thự</option>
+                  <option value="Nhà phố thương mại">Nhà phố thương mại</option>
+                  <option value="Chung cư"> Căn hộ chung cư</option>
+                </select>
+                <div class="validation"></div>
+              </div>
+
+              <div class="form-group">
+                <h3 class="title_sticky">Trạng thái sản phẩm:</h3>
+                <select
+                  name="status"
+                  onChange={handleChangedInput}
+                  id="my_select"
+                >
+                  <option selected="selected" value="0">
+                    --- Lựa chọn ---
+                  </option>
+                  <option value="Bán">Bán</option>
+                  <option value="Cho thuê">Cho thuê</option>
+                </select>
+                <div class="validation"></div>
+              </div>
+              <div class="form-group">
+                <h3 class="title_sticky">Giấy tờ pháp lí:</h3>
+                <select
+                  name="legalDocuments"
+                  onChange={handleChangedInput}
+                  id="my_select"
+                >
+                  <option selected="selected" value="0">
+                    --- Lựa chọn ---
+                  </option>
+                  <option value="Sổ đỏ">Sổ đỏ</option>
+                  <option value="Hợp đồng mua bán">Hợp đồng mua bán</option>
+                  <option value="Đang chờ sổ">Đang chờ sổ</option>
+                </select>
+                <div class="validation"></div>
+              </div>
+
+              <div class="form-group">
+                <h3 class="title_sticky">Giá: (VNĐ)</h3>
+                <Form>
+                  <Input
                     onChange={handleChangedInput}
-                    style={{
-                      width: "94%",
-                      float: "right",
-                      marginTop: "5px",
-                      textAlign: "center",
-                    }}
-                  >
-                    <option value="0">--- Lựa chọn ---</option>
-                    <option value="Bán">Bán</option>
-                    <option value="Cho thuê">Cho thuê</option>
-                  </select>
-                  <div class="validation"></div>
-                </div>
-
-                <div class="form-group">
-                  <p>
-                    Giá (VND)<span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-hand-holding-usd"></i>
-                  </span>
-                  <input
                     type="number"
                     name="price"
-                    id="price"
                     value={productForm.price}
-                    onChange={handleChangedInput}
+                    size="large"
+                    placeholder="Giá sản phẩm"
+                    prefix={<i class="fas fa-hand-holding-usd"></i>}
+                    style={{ width: "100%" }}
                   />
-                  <div class="validation"></div>
-                </div>
+                  {/* <NumberFormat
+                      customInput={Input}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      decimalScale={2}
+                      onChange={handleChangedInput}
+                      name="price"
+                      value={productForm.price}
+                      // prefix={<i class="fas fa-hand-holding-usd"></i>}
+                    /> */}
+                </Form>
+              </div>
+              <div class="form-group">
+                <h3 class="title_sticky">
+                  Diện tích (m<sup>2</sup>)
+                </h3>
 
-                <div class="form-group">
-                  <p>
-                    Diện tích (m<sup>2</sup>) <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="far fa-square"></i>
-                  </span>
-                  <input
+                <Form>
+                  <Input
+                    onChange={handleChangedInput}
                     type="number"
                     name="acreage"
-                    id="acreage"
                     value={productForm.acreage}
-                    onChange={handleChangedInput}
+                    size="large"
+                    placeholder="Diện tích"
+                    prefix={<i class="far fa-square"></i>}
+                    style={{ width: "100%" }}
                   />
-                  <div class="validation"></div>
-                </div>
+                </Form>
               </div>
-
-              <div class="rightcontact">
-                <div class="form-group">
-                  <p>
-                    Phòng Ngủ <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-bed"></i>
-                  </span>
-                  <input
+            </div>
+            <div class="rightcontact">
+              <div class="form-group">
+                <h3 class="title_sticky">Phòng ngủ</h3>
+                <Form>
+                  <Input
+                    onChange={handleChangedInput}
                     type="number"
                     name="bedroom"
-                    id="bedroom"
                     value={productForm.bedroom}
-                    onChange={handleChangedInput}
+                    size="large"
+                    placeholder="Phòng ngủ"
+                    prefix={<i class="fas fa-bed"></i>}
+                    style={{ width: "100%" }}
                   />
-                  <div class="validation"></div>
-                </div>
-                <div class="form-group">
-                  <p>
-                    Phòng Vệ Sinh <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-toilet"></i>
-                  </span>
-                  <input
+                </Form>
+              </div>
+              <div class="form-group">
+                <h3 class="title_sticky">Phòng vệ sinh</h3>
+                <Form>
+                  <Input
+                    onChange={handleChangedInput}
                     type="number"
                     name="toilet"
-                    id="toilet"
                     value={productForm.toilet}
-                    onChange={handleChangedInput}
+                    size="large"
+                    placeholder="Phòng vệ sinh"
+                    prefix={<i class="fas fa-toilet"></i>}
+                    style={{ width: "100%" }}
                   />
-                  <div class="validation"></div>
-                </div>
+                </Form>
+              </div>
+              <div className="form-group">
+                <h3 class="title_sticky">Tiện ích</h3>
+                <Select
+                  mode="multiple"
+                  style={{ width: "100%" }}
+                  placeholder="ví dụ: gần Trường học,..."
+                  defaultValue={["Chợ"]}
+                  onChange={handleChange}
+                  optionLabelProp="label"
+                  id="my_select"
+                >
+                  <Option value="Chợ" label=" Chợ" selected="selected">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Chợ
+                    </div>
+                  </Option>
+                  <Option value="Bệnh viện" label=" Bệnh viện">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Bệnh viện
+                    </div>
+                  </Option>{" "}
+                  <Option value="Siêu thị" label="Siêu thị">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Siêu thị
+                    </div>
+                  </Option>
+                  <Option value="Trường học" label="Trường học">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Trường học
+                    </div>
+                  </Option>
+                  <Option value="Công viên" label="Công viên">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Công viên
+                    </div>
+                  </Option>
+                  <Option value="Sân bay" label="Sân bay">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Sân bay
+                    </div>
+                  </Option>
+                  <Option value="Hồ bơi" label="Hồ bơi">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Hồ bơi
+                    </div>
+                  </Option>
+                  <Option value="Phòng gym" label="Phòng gym">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Phòng gym
+                    </div>
+                  </Option>{" "}
+                  <Option value="Ga tàu" label="Ga tàu">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Ga tàu
+                    </div>
+                  </Option>{" "}
+                  <Option value="Bến xe bus" label="Bến xe bus">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Bến xe bus
+                    </div>
+                  </Option>{" "}
+                  <Option value="Bến xe" label="Bến xe">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Bến xe
+                    </div>
+                  </Option>
+                  <Option value="Quán coffee" label="Quán coffee">
+                    <div className="demo-option-label-item">
+                      <span
+                        role="img"
+                        aria-label="China"
+                        style={{ margin: "0.3rem" }}
+                      >
+                        gần
+                      </span>
+                      Quán coffee
+                    </div>
+                  </Option>
+                </Select>
+              </div>
+              <div class="form-group">
+                <h3 class="title_sticky">Địa chỉ</h3>
+                <Row>
+                  <Select
+                    showSearch
+                    style={{ width: 250 }}
+                    placeholder="Chọn tỉnh/ Thành phố"
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
+                      0
+                    }
+                    filterSort={(optionA, optionB) =>
+                      optionA.label
+                        .toLowerCase()
+                        .localeCompare(optionB.label.toLowerCase())
+                    }
+                    options={
+                      citys &&
+                      citys.map((value) => {
+                        return {
+                          key: value.name,
+                          label: value.name,
+                          value: value.code,
+                        };
+                      })
+                    }
+                    onChange={(value) => {
+                      GetDistricts(value);
+                    }}
+                  />
+                  <Select
+                    showSearch
+                    style={{ width: 230 }}
+                    placeholder="Chọn quận/ huyện"
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
+                      0
+                    }
+                    filterSort={(optionA, optionB) =>
+                      optionA.label
+                        .toLowerCase()
+                        .localeCompare(optionB.label.toLowerCase())
+                    }
+                    options={
+                      districts &&
+                      districts.map((value) => {
+                        return {
+                          key: value.name,
+                          label: value.name,
+                          value: value.code,
+                        };
+                      })
+                    }
+                    onChange={(value) => GetWards(value)}
+                  />
 
-                <div class="form-group">
-                  <p>
-                    Số Lượng <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-anchor"></i>
-                  </span>
-                  <input
-                    type="text"
-                    name="countInStock"
-                    id="countInStock"
-                    value={productForm.countInStock}
-                    onChange={handleChangedInput}
-                    disabled
+                  <Select
+                    showSearch
+                    style={{ width: 210 }}
+                    placeholder="Chọn phường/ xã"
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
+                      0
+                    }
+                    filterSort={(optionA, optionB) =>
+                      optionA.label
+                        .toLowerCase()
+                        .localeCompare(optionB.label.toLowerCase())
+                    }
+                    options={
+                      wards &&
+                      wards.map((value) => {
+                        return {
+                          key: value.name,
+                          label: value.name,
+                          value: value.name,
+                        };
+                      })
+                    }
+                    onChange={(value) => setWard(value)}
                   />
-                  <div class="validation"></div>
-                </div>
-                <div class="form-group">
-                  <p>
-                    Mô tả chi tiết <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-audio-description"></i>
-                  </span>
-                  <input
-                    type="text"
-                    name="description"
-                    id="description"
-                    value={productForm.description}
-                    onChange={handleChangedInput}
+                  <Input
+                    style={{ marginTop: "20px" }}
+                    placeholder="Nhập địa chỉ nhà"
+                    value={address}
+                    onChange={(value) => setAddress(value.target.value)}
                   />
-                  <div class="validation"></div>
-                </div>
+                  <Search
+                    style={{ marginTop: "20px" }}
+                    placeholder="Địa chỉ nhận được"
+                    allowClear
+                    enterButton="Tìm kiếm"
+                    size="large"
+                    value={`${address ? address + " ," : ""}${
+                      ward ? ward + " ," : ""
+                    }${district ? district + " ," : ""}${city}`}
+                    onSearch={onSearch}
+                  />
+                </Row>
+              </div>
 
-                <div class="form-group">
-                  <p>
-                    Địa chỉ <span>*</span>
-                  </p>
-                  <span class="icon-case">
-                    <i class="fas fa-map-pin"></i>
-                  </span>
-                  <input
-                    type="text"
+              {/* <div class="form-group">
+                <h3 class="title_sticky">Địa chỉ</h3>
+                <Form
+                  name="basic"
+                  wrapperCol={{ span: 35 }}
+                  initialValues={{ remember: true }}
+                  autoComplete="off"
+                >
+                  <Form.Item
                     name="address"
-                    id="address"
-                    value={productForm.address}
-                    onChange={handleChangedInput}
-                  />
-                  <div class="validation"></div>
-                </div>
-              </div>
-              <div className="row">
-                <div className="row center">
-                  <h3 style={{ color: "red" }}>Danh sách hình ảnh</h3>
-                  <ImgCrop>
-                    <Upload
-                      {...props}
-                      onRemove={(file) => {
-                        onRemoveImage(file);
-                        return { ...props };
-                      }}
-                      listType="picture-card"
-                      fileList={fileList}
-                      onChange={onChange}
-                      onPreview={onPreview}
-                    >
-                      {fileList.length < 5 && "+ Upload"}
-                    </Upload>
-                  </ImgCrop>
-                  {images.length > 0 && images.map()}
-                </div>
+                    rules={[
+                      {
+                        required: true,
+                        message: "Địa chỉ không được bỏ trống",
+                      },
+                    ]}
+                  >
+                    <Input
+                      onChange={handleChangedInput}
+                      value={productForm.address}
+                      name="address"
+                      size="large"
+                      placeholder="Ví dụ: 4, Đường Dương Quảng Hàm, Phường 5, Quận Gò Vấp"
+                      prefix={<i class="fas fa-audio-description"></i>}
+                    />
+                  </Form.Item>
+                </Form>
+              </div> */}
+              <div class="form-group">
+                <h3 class="title_sticky">Mô tả chi tiết</h3>
+                <Form
+                  name="basic"
+                  wrapperCol={{ span: 35 }}
+                  initialValues={{ remember: true }}
+                  autoComplete="off"
+                >
+                  <Form.Item
+                    name="description"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Chi tiết sản phẩm không được bỏ trống",
+                      },
+                    ]}
+                  >
+                    <TextArea
+                      style={{ height: "141px" }}
+                      showCount
+                      maxLength={1000}
+                      onChange={handleChangedInput}
+                      value={productForm.description}
+                      name="description"
+                      size="large"
+                      placeholder="Mô tả chi tiết sản phẩm"
+                      prefix={<i class="fas fa-audio-description"></i>}
+                    />
+                  </Form.Item>
+                </Form>
               </div>
             </div>
-            <div className="row" style={{ width: "100%" }}>
-              <div className="row center" style={{ width: "100%" }}>
-                <iframe
-                  title="ggmap"
-                  src={`https://maps.google.com/maps?q=${lat},${lng}&output=embed`}
-                  className="ggmap"
-                  height="600"
-                  width="100%"
-                ></iframe>
+            <div className="imagecontact">
+              <div class="form-group">
+                <h3 class="title_sticky">Danh sách hình ảnh</h3>
+                <ImgCrop rotate>
+                  <Upload
+                    {...props}
+                    onRemove={(file) => {
+                      onRemoveImage(file);
+                      return { ...props };
+                    }}
+                    listType="picture-card"
+                    fileList={fileList}
+                    onChange={onChange}
+                    onPreview={handlePreview}
+                    status="success"
+                  >
+                    {fileList.length < 5 && "+ Upload"}
+                  </Upload>
+                </ImgCrop>
+                {images.length > 0 && images.map()}
               </div>
             </div>
-            <button onClick={handleCreate} class="bouton-contact">
-              Đăng Bài{lat},{lng}
+          </div>
+          <div
+            className="row"
+            style={{ width: "100%", borderTop: "1px solid #eee" }}
+          >
+            <h3
+              class="title_sticky"
+              style={{ fontWeight: "bold", fontSize: "30px", color: "red" }}
+            >
+              Vị trí sản phẩm
+            </h3>
+            <div className="row center" style={{ width: "100%" }}>
+              <iframe
+                title="ggmap"
+                src={`https://maps.google.com/maps?q=${lat},${lng}&output=embed`}
+                className="ggmap"
+                height="600"
+                width="100%"
+              ></iframe>
+            </div>
+          </div>
+          <div className="row center">
+            <button
+              style={{ width: "80%", fontWeight: "bold", fontSize: "30px" }}
+              onClick={handleCreate}
+              class="bouton-contact"
+            >
+              Đăng Bài
             </button>
-          </form>
-        </div>
-      </div>
-    </div>
+          </div>
+        </Form>
+      </Row>
+      <Modal
+        visible={previewVisible}
+        title="Chi tiết hình ảnh"
+        footer={null}
+        onCancel={handleCancel}
+      >
+        <img alt="example" style={{ width: "100%" }} src={previewImage} />
+      </Modal>
+    </>
   );
 }

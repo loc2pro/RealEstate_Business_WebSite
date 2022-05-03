@@ -2,8 +2,13 @@ import { applyMiddleware, combineReducers, compose, createStore } from "redux";
 import thunk from "redux-thunk";
 import { cartReducer } from "./reducers/cartReducers";
 import {
-  GROUNDDetailsReducer,
+  groundCategoryListReducer,
+  groundDetailsReducer,
   groundListReducer,
+  ListBrowseGroundReducer,
+  ListGroundReducer,
+  ListGroundSellerReducer,
+  ListgroundSoldSellerReducer,
   postGroundsReducer,
 } from "./reducers/groundReducers";
 import {
@@ -13,6 +18,13 @@ import {
   orderPayReducer,
 } from "./reducers/orderReducers";
 import {
+  postListGroundReducer,
+  postListReducer,
+} from "./reducers/postReducers";
+import {
+  ListBrowseReducer,
+  ListProductSellerReducer,
+  ListProductSoldSellerReducer,
   ListReducer,
   postProductsReducer,
   productCategoryListReducer,
@@ -21,10 +33,14 @@ import {
   userProductsReducer,
 } from "./reducers/productReducers";
 import {
+  listSellerReducer,
+  listUserReducer,
   userDetailsReducer,
   userRegisterReducer,
   userSigninReducer,
   userUpdateProfileReducer,
+  salarySellerReducer,
+  sellerUpdateReducer,
 } from "./reducers/userReducers";
 
 const initialState = {
@@ -61,7 +77,21 @@ const reducer = combineReducers({
   postProducts: postProductsReducer,
   postGrounds: postGroundsReducer,
   groundList: groundListReducer,
-  groundDetails: GROUNDDetailsReducer,
+  groundDetails: groundDetailsReducer,
+  groundCategoryList: groundCategoryListReducer,
+  listGround: ListGroundReducer,
+  listPosts: postListReducer,
+  listPostGround: postListGroundReducer,
+  browseList: ListBrowseReducer,
+  browseGroundList: ListBrowseGroundReducer,
+  listProductSeller: ListProductSellerReducer,
+  listProductSoldSeller: ListProductSoldSellerReducer,
+  listGroundSeller: ListGroundSellerReducer,
+  listGroundSoldSeller: ListgroundSoldSellerReducer,
+  listSeller: listSellerReducer,
+  listUser: listUserReducer,
+  salarySeller: salarySellerReducer,
+  updateSeller: sellerUpdateReducer,
 });
 const composeEnhancer = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 const store = createStore(

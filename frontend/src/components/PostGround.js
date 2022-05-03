@@ -1,51 +1,129 @@
-import { notification, Upload } from "antd";
-import ImgCrop from "antd-img-crop";
+import { UserOutlined } from "@ant-design/icons";
+import {
+  Form,
+  Input,
+  message,
+  Modal,
+  notification,
+  Row,
+  Select,
+  Upload,
+} from "antd";
 import "antd/dist/antd.css";
 import AWS from "aws-sdk";
 import axios from "axios";
-import FormData from "form-data";
 import "mapbox-gl/dist/mapbox-gl.css";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { postGround } from "../actions/groundActions";
 
+const { Option } = Select;
+const { Search } = Input;
+const { TextArea } = Input;
+
+function getBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+}
 export default function PostGround() {
   const dispatch = useDispatch();
   const userSignin = useSelector((state) => state.userSignin);
   const { userInfo } = userSignin;
   const [lat, setLat] = useState(10.8230989);
   const [lng, setLng] = useState(106.6296638);
-
+  //address
+  const [citys, setCitys] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [ward, setWard] = useState("");
+  const [address, setAddress] = useState("");
+  //img
+  const [previewVisible, SetPreviewVisible] = useState(false);
+  const [previewImage, SetPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
-  const [toast, setToast] = useState({
-    show: false,
-    success: false,
-    message: "",
-  });
+  function GetCitys() {
+    axios
+      .get("https://provinces.open-api.vn/api/")
+      .then((res) => {
+        setCitys(res.data);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
+  function GetDistricts(code) {
+    axios
+      .get(`https://provinces.open-api.vn/api/p/${code}?depth=2`)
+      .then((res) => {
+        setDistricts(res.data.districts);
+        setCity(res.data.name);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
+  function GetWards(code) {
+    axios
+      .get(`https://provinces.open-api.vn/api/d/${code}?depth=2`)
+      .then((res) => {
+        setWards(res.data.wards);
+        setDistrict(res.data.name);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
   useEffect(() => {
-    if (toast) {
-      setTimeout(() => {
-        setToast({ ...toast, show: false });
-      }, 6000);
-    }
-  }, [toast]);
+    GetCitys();
+  }, []);
+
+  const onSearch = (value) => {
+    axios
+      .get(
+        //9cbf0bc15d3901b7e043d8f76be8d73f370a82fe629a2d46
+        `https://maps.vietmap.vn/api/search?api-version=1.1&apikey=2f7cf1b8d4f0cce9ef2accb74b6c3cd90ac926aa78f90e4c&text=${value}`
+      )
+      .then(function (response) {
+        console.log(response);
+        setLng(response.data.data.features[0].bbox[0]);
+        setLat(response.data.data.features[0].bbox[1]);
+        console.log(response);
+      })
+      .catch(function (error) {
+        console.log(error);
+      })
+      .then(function () {});
+  };
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
   };
 
-  const onPreview = async (file) => {
-    let src = file.url;
-    if (!src) {
-      src = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file.originFileObj);
-        reader.onload = () => resolve(reader.result);
-      });
+  const handleCancel = () => SetPreviewVisible(false);
+
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
     }
-    const image = new Image();
-    image.src = src;
-    const imgWindow = window.open(src);
-    imgWindow.document.write(image.outerHTML);
+    SetPreviewImage(file.url || file.preview);
+    SetPreviewVisible(true);
   };
   const props = {
     customRequest({ file, onError, onProgress, onSuccess }) {
@@ -111,13 +189,13 @@ export default function PostGround() {
   const [productForm, setProductForm] = useState({
     name: "",
     user: userInfo?._id,
-    image: null,
     status: "",
     type: "",
-    address: "",
     description: "",
     price: "",
     acreage: "",
+    legalDocuments: "",
+    countInStock: 1,
   });
   const handleCreate = (e) => {
     e.preventDefault();
@@ -125,24 +203,20 @@ export default function PostGround() {
     for (let item of fileList) {
       listImages.push(item.originFileObj.name);
     }
-    const data = new FormData();
-    data.append("name", productForm.name);
-    data.append("user", productForm.user);
-    data.append("status", productForm.status);
-    data.append("type", productForm.type);
-    data.append("address", productForm.address);
-    data.append("description", productForm.description);
-    data.append("price", productForm.price);
-    data.append("acreage", productForm.acreage);
-    for (let item of listImages) {
-      data.append("image", item);
-    }
-    data.append("lat", lat);
-    data.append("lng", lng);
-    console.log("data", productForm);
-    console.log("image", listImages);
-    const createe = dispatch(postGround(data));
-    createe
+
+    const create = dispatch(
+      postGround(
+        productForm,
+        address,
+        district,
+        ward,
+        city,
+        lat,
+        lng,
+        listImages
+      )
+    );
+    create
       .then((data) => {
         if (data.success) {
           notification.success({
@@ -174,13 +248,17 @@ export default function PostGround() {
       user: userInfo?._id,
       image: null,
       status: "",
-      type: "",
-      address: "",
+      type: "0",
       description: "",
       price: "",
       acreage: "",
+      countInStock: 1,
     });
     setFileList([]);
+    var options = document.querySelectorAll("#my_select option");
+    for (var i = 0, l = options.length; i < l; i++) {
+      options[i].selected = options[i].defaultSelected;
+    }
   };
 
   const handleChangedInput = (e) => {
@@ -208,177 +286,340 @@ export default function PostGround() {
   }, [productForm.address]);
 
   return (
-    <div>
-      <div className="row" style={{ width: "100%" }}>
-        <div className="row center" style={{ width: "100%" }}>
-          <form enctype="multipart/form-data" style={{ width: "80%" }}>
-            <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
-              <span> Đăng Bài </span>
-            </h1>
+    <>
+      <Row>
+        <Form enctype="multipart/form-data" style={{ width: "100%" }}>
+          <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
+            <span> Đăng Bài </span>
+            <a>Đất Nền/ Đất Thổ Cư</a>
+          </h1>
 
-            <div class="contentform">
-              <div class="leftcontact">
-                <div class="form-group">
-                  <p>Tên Tài Sản</p>
-                  <span class="icon-case">
-                    <i class="fas fa-home"></i>
-                  </span>
-                  <input
-                    type="text"
+          <div class="contentform">
+            <h3
+              class="title_sticky"
+              id="jumpto_0"
+              style={{ fontWeight: "bold", fontSize: "30px", color: "red" }}
+            >
+              Thông tin sản phẩm
+            </h3>
+            <div class="leftcontact">
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Tên tài sản:
+                </h3>
+                <Form
+                  name="basic"
+                  wrapperCol={{ span: 35 }}
+                  initialValues={{ remember: true }}
+                  autoComplete="off"
+                >
+                  <Form.Item
                     name="name"
-                    id="name"
-                    value={productForm.name}
-                    onChange={handleChangedInput}
-                    data-rule="required"
-                  />
-                  <div class="validation"></div>
-                </div>
-
-                <div class="form-group">
-                  <p>Loại</p>
-                  <span class="icon-case">
-                    <i class="fas fa-align-center"></i>
-                  </span>
-                  <select
-                    name="type"
-                    onChange={handleChangedInput}
-                    style={{
-                      width: "94%",
-                      float: "right",
-                      marginTop: "5px",
-                      textAlign: "center",
-                    }}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Tên sản phẩm không được bỏ trống",
+                      },
+                    ]}
                   >
-                    <option value="0">--- Lựa chọn ---</option>
-                    <option value="Đất dự án">Đất dự án</option>
-                    <option value="Đất thổ cư">Đất thổ cư</option>
-                    <option value="Đất nông nghiệp">Đất nông nghiệp</option>
-                  </select>
-                  <div class="validation"></div>
-                </div>
-
-                <div class="form-group">
-                  <p>Trạng Thái</p>
-                  <span class="icon-case">
-                    <i class="fas fa-exclamation"></i>
-                  </span>
-                  <select
-                    name="status"
-                    onChange={handleChangedInput}
-                    style={{
-                      width: "94%",
-                      float: "right",
-                      marginTop: "5px",
-                      textAlign: "center",
-                    }}
-                  >
-                    <option value="0">--- Lựa chọn ---</option>
-                    <option value="Bán">Bán</option>
-                    <option value="Cho thuê">Cho thuê</option>
-                  </select>
-                  <div class="validation"></div>
-                </div>
-
-                <div class="form-group">
-                  <p>Giá (VND)</p>
-                  <span class="icon-case">
-                    <i class="fas fa-hand-holding-usd"></i>
-                  </span>
-                  <input
-                    type="number"
-                    name="price"
-                    id="price"
-                    value={productForm.price}
-                    onChange={handleChangedInput}
-                  />
-                  <div class="validation"></div>
-                </div>
+                    <Input
+                      maxLength={60}
+                      onChange={handleChangedInput}
+                      value={productForm.name}
+                      name="name"
+                      size="large"
+                      placeholder="Tên sản phẩm"
+                      prefix={<UserOutlined />}
+                    />
+                  </Form.Item>
+                </Form>
               </div>
 
-              <div class="rightcontact">
-                <div class="form-group">
-                  <p>
-                    Diện tích (m<sup>2</sup>)
-                  </p>
-                  <span class="icon-case">
-                    <i class="far fa-square"></i>
-                  </span>
-                  <input
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Loại sản phẩm:
+                </h3>
+                <select
+                  id="my_select"
+                  name="type"
+                  onChange={handleChangedInput}
+                >
+                  <option selected="selected" value="0">
+                    --- Lựa chọn ---
+                  </option>
+                  <option value="Đất dự án">Đất dự án</option>
+                  <option value="Đất thổ cư">Đất thổ cư</option>
+                  <option value="Đất nông nghiệp">Đất nông nghiệp</option>
+                </select>
+                <div class="validation"></div>
+              </div>
+
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Trạng thái sản phẩm:
+                </h3>
+                <select
+                  id="my_select"
+                  name="status"
+                  onChange={handleChangedInput}
+                >
+                  <option selected="selected" value="0">
+                    --- Lựa chọn ---
+                  </option>
+                  <option value="Bán">Bán</option>
+                  <option value="Cho thuê">Cho thuê</option>
+                </select>
+                <div class="validation"></div>
+              </div>
+
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Giấy tờ pháp lí:
+                </h3>
+                <select name="legalDocuments" onChange={handleChangedInput}>
+                  <option selected="selected" value="0">
+                    --- Lựa chọn ---
+                  </option>
+                  <option value="Sổ đỏ">Sổ đỏ</option>
+                  <option value="Hợp đồng mua bán">Hợp đồng mua bán</option>
+                  <option value="Đang chờ sổ">Đang chờ sổ</option>
+                </select>
+                <div class="validation"></div>
+              </div>
+            </div>
+
+            <div class="rightcontact">
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Diện tích (m<sup>2</sup>)
+                </h3>
+
+                <Form>
+                  <Input
+                    onChange={handleChangedInput}
                     type="number"
                     name="acreage"
-                    id="acreage"
                     value={productForm.acreage}
-                    onChange={handleChangedInput}
+                    size="large"
+                    placeholder="Diện tích"
+                    prefix={<i class="far fa-square"></i>}
+                    style={{ width: "100%" }}
                   />
-                  <div class="validation"></div>
-                </div>
-                <div class="form-group">
-                  <p>Mô tả chi tiết</p>
-                  <span class="icon-case">
-                    <i class="fas fa-audio-description"></i>
-                  </span>
-                  <input
-                    type="text"
-                    name="description"
-                    id="description"
-                    value={productForm.description}
+                </Form>
+              </div>
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Giá: (VNĐ)
+                </h3>
+                <Form>
+                  <Input
                     onChange={handleChangedInput}
+                    type="number"
+                    name="price"
+                    value={productForm.price}
+                    size="large"
+                    placeholder="Giá sản phẩm"
+                    prefix={<i class="fas fa-hand-holding-usd"></i>}
+                    style={{ width: "100%" }}
                   />
-                  <div class="validation"></div>
-                </div>
+                </Form>
+              </div>
+              <div class="form-group">
+                <h3 class="title_sticky">Địa chỉ</h3>
+                <Row>
+                  <Select
+                    showSearch
+                    style={{ width: 250 }}
+                    placeholder="Chọn tỉnh/ Thành phố"
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
+                      0
+                    }
+                    filterSort={(optionA, optionB) =>
+                      optionA.label
+                        .toLowerCase()
+                        .localeCompare(optionB.label.toLowerCase())
+                    }
+                    options={
+                      citys &&
+                      citys.map((value) => {
+                        return {
+                          key: value.name,
+                          label: value.name,
+                          value: value.code,
+                        };
+                      })
+                    }
+                    onChange={(value) => {
+                      GetDistricts(value);
+                    }}
+                  />
+                  <Select
+                    showSearch
+                    style={{ width: 230 }}
+                    placeholder="Chọn quận/ huyện"
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
+                      0
+                    }
+                    filterSort={(optionA, optionB) =>
+                      optionA.label
+                        .toLowerCase()
+                        .localeCompare(optionB.label.toLowerCase())
+                    }
+                    options={
+                      districts &&
+                      districts.map((value) => {
+                        return {
+                          key: value.name,
+                          label: value.name,
+                          value: value.code,
+                        };
+                      })
+                    }
+                    onChange={(value) => GetWards(value)}
+                  />
 
-                <div class="form-group">
-                  <p>Địa chỉ</p>
-                  <span class="icon-case">
-                    <i class="fas fa-map-pin"></i>
-                  </span>
-                  <input
-                    type="text"
-                    name="address"
-                    id="address"
-                    value={productForm.address}
-                    onChange={handleChangedInput}
+                  <Select
+                    showSearch
+                    style={{ width: 210 }}
+                    placeholder="Chọn phường/ xã"
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
+                      0
+                    }
+                    filterSort={(optionA, optionB) =>
+                      optionA.label
+                        .toLowerCase()
+                        .localeCompare(optionB.label.toLowerCase())
+                    }
+                    options={
+                      wards &&
+                      wards.map((value) => {
+                        return {
+                          key: value.name,
+                          label: value.name,
+                          value: value.name,
+                        };
+                      })
+                    }
+                    onChange={(value) => setWard(value)}
                   />
-                  <div class="validation"></div>
-                </div>
-                <div class="form-group">
-                  <p>Danh sách hình ảnh</p>
-                  <ImgCrop>
-                    <Upload
-                      {...props}
-                      onRemove={(file) => {
-                        onRemoveImage(file);
-                        return { ...props };
-                      }}
-                      listType="picture-card"
-                      fileList={fileList}
-                      onChange={onChange}
-                      onPreview={onPreview}
-                    >
-                      {fileList.length < 5 && "+ Upload"}
-                    </Upload>
-                  </ImgCrop>
-                  <div class="validation"></div>
-                </div>
+                  <Input
+                    style={{ marginTop: "20px" }}
+                    placeholder="Nhập địa chỉ nhà"
+                    value={address}
+                    onChange={(value) => setAddress(value.target.value)}
+                  />
+                  <Search
+                    style={{ marginTop: "20px" }}
+                    placeholder="Địa chỉ nhận được"
+                    allowClear
+                    enterButton="Tìm kiếm"
+                    size="large"
+                    value={`${address ? address + " ," : ""}${
+                      ward ? ward + " ," : ""
+                    }${district ? district + " ," : ""}${city}`}
+                    onSearch={onSearch}
+                  />
+                </Row>
+              </div>
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Mô tả chi tiết
+                </h3>
+                <Form
+                  name="basic"
+                  wrapperCol={{ span: 35 }}
+                  initialValues={{ remember: true }}
+                  autoComplete="off"
+                >
+                  <Form.Item
+                    name="description"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Chi tiết sản phẩm không được bỏ trống",
+                      },
+                    ]}
+                  >
+                    <TextArea
+                      showCount
+                      maxLength={1000}
+                      onChange={handleChangedInput}
+                      value={productForm.description}
+                      name="description"
+                      size="large"
+                      placeholder="Mô tả chi tiết sản phẩm"
+                      prefix={<i class="fas fa-audio-description"></i>}
+                    />
+                  </Form.Item>
+                </Form>
               </div>
             </div>
-            <div className="row" style={{ width: "100%" }}>
-              <div className="row center" style={{ width: "100%" }}>
-                <iframe
-                  title="ggmap"
-                  src={`https://maps.google.com/maps?q=${lat},${lng}&output=embed`}
-                  className="ggmap"
-                  height="600"
-                  width="100%"
-                ></iframe>
+            <div className="imagecontact">
+              <div class="form-group">
+                <h3 class="title_sticky" id="jumpto_0">
+                  Danh sách hình ảnh
+                </h3>
+                <Upload
+                  {...props}
+                  onRemove={(file) => {
+                    onRemoveImage(file);
+                    return { ...props };
+                  }}
+                  listType="picture-card"
+                  fileList={fileList}
+                  onChange={onChange}
+                  onPreview={handlePreview}
+                  status="success"
+                >
+                  {fileList.length < 5 && "+ Upload"}
+                </Upload>
+                <div class="validation"></div>
               </div>
             </div>
-            <button onClick={handleCreate} class="bouton-contact">
+          </div>
+          <div
+            className="row"
+            style={{ width: "100%", borderTop: "1px solid #eee" }}
+          >
+            <h3
+              class="title_sticky"
+              id="jumpto_0"
+              style={{ fontWeight: "bold", fontSize: "30px", color: "red" }}
+            >
+              Vị trí sản phẩm
+            </h3>
+            <div className="row center" style={{ width: "100%" }}>
+              <iframe
+                title="ggmap"
+                src={`https://maps.google.com/maps?q=${lat},${lng}&output=embed`}
+                className="ggmap"
+                height="600"
+                width="100%"
+              ></iframe>
+            </div>
+          </div>
+          <div className="row center">
+            <button
+              style={{ width: "80%", fontWeight: "bold", fontSize: "30px" }}
+              onClick={handleCreate}
+              class="bouton-contact"
+            >
               Đăng Bài
             </button>
-          </form>
-        </div>
-      </div>
-    </div>
+          </div>
+        </Form>
+      </Row>
+      <Modal
+        visible={previewVisible}
+        title="Chi tiết hình ảnh"
+        footer={null}
+        onCancel={handleCancel}
+      >
+        <img alt="example" style={{ width: "100%" }} src={previewImage} />
+      </Modal>
+    </>
   );
 }
