@@ -18,9 +18,13 @@ const s3 = new AWS.S3({
 productRouter.get(
   "/product",
   expressAsyncHandler(async (req, res) => {
+    console.log(req.query);
     const pageSize = 99999999999999999;
     const page = Number(req.query.pageNumber) || 1;
     const name = req.query.name || "";
+    const city = req.query.city || "";
+    const district = req.query.district || "";
+    const ward = req.query.ward || "";
     const type = req.query.type || "";
     const order = req.query.order || "";
     const min =
@@ -30,6 +34,9 @@ productRouter.get(
 
     const nameFilter = name ? { name: { $regex: name, $options: "i" } } : {};
     const typeFilter = type ? { type } : {};
+    const cityFilter = city ? { city } : {};
+    const districtFilter = district ? { district } : {};
+    const wardFilter = ward ? { ward } : {};
     const priceFilter = min && max ? { price: { $gte: min, $lte: max } } : {};
     const sortOrder =
       order === "lowest"
@@ -41,11 +48,17 @@ productRouter.get(
         : { _id: -1 };
     const count = await Product.count({
       ...nameFilter,
+      ...cityFilter,
+      ...districtFilter,
+      ...wardFilter,
       ...typeFilter,
       ...priceFilter,
     });
     const products = await Product.find({
       ...nameFilter,
+      ...cityFilter,
+      ...districtFilter,
+      ...wardFilter,
       ...typeFilter,
       ...priceFilter,
     })

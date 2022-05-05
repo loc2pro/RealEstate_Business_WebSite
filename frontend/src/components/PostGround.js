@@ -290,7 +290,6 @@ export default function PostGround() {
       <Row>
         <Form enctype="multipart/form-data" style={{ width: "100%" }}>
           <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
-            <span> Đăng Bài </span>
             <a>Đất Nền/ Đất Thổ Cư</a>
           </h1>
 

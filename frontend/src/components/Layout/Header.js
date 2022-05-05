@@ -64,13 +64,7 @@ function Header(props) {
   return (
     <div className="header">
       <div className="row">
-        <Button
-          className="menu"
-          type="primary"
-          icon={<MenuOutlined />}
-          onClick={() => setVisible(true)}
-          style={{ width: "5rem", height: "4.5rem" }}
-        />
+      
         <a href="/" class="logo">
           <span>Bất Động Sản</span>Phát Lộc
         </a>
@@ -81,7 +75,6 @@ function Header(props) {
           <a href="/service">Chung Cư</a>
           <a href="/service">Nhà Ở</a>
           <a href="/ground">Đất Nền</a>
-          {userInfo && <a href="/post">Đăng Tin</a>}
           <a href="/map">Liên Hệ</a>
         </nav>
 
@@ -114,8 +107,8 @@ function Header(props) {
                     </a>
                   </li>
                   <li>
-                    <a href="/postHistory" style={{ fontSize: "20px" }}>
-                      Bài đăng
+                    <a href="/post" style={{ fontSize: "20px" }}>
+                      Gữi bài đăng
                     </a>
                   </li>
                   <li>

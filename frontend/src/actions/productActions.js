@@ -47,14 +47,24 @@ import {
 } from "../constants/productConstants";
 
 export const listProductss =
-  ({ pageNumber = "", name = "", type = "", order = "", min = 0, max = 0 }) =>
+  ({
+    city = "",
+    district = "",
+    ward = "",
+    pageNumber = "",
+    name = "",
+    type = "",
+    order = "",
+    min = 0,
+    max = 0,
+  }) =>
   async (dispatch) => {
     dispatch({
       type: PRODUCT_LIST_REQUEST_TEST,
     });
     try {
       const { data } = await Axios.get(
-        `${api}/api/products/product?pageNumber=${pageNumber}&name=${name}&type=${type}&min=${min}&max=${max}&order=${order}`
+        `${api}/api/products/product?pageNumber=${pageNumber}&name=${name}&type=${type}&ward=${ward}&district=${district}&city=${city}&min=${min}&max=${max}&order=${order}`
       );
       dispatch({ type: PRODUCT_LIST_SUCCESS_TEST, payload: data });
     } catch (error) {

@@ -14,10 +14,10 @@ export default function NavTab() {
         size="Large"
         style={{ fontWeight: "bold", fontSize: "60px" }}
       >
-        <TabPane tab="Đăng Tin Nhà Ở/ Chung Cư" key="1">
+        <TabPane tab="Nhà Ở/ Chung Cư" key="1">
           <Post />
         </TabPane>
-        <TabPane tab="Đăng Tin Đất" key="2">
+        <TabPane tab="Đất" key="2">
           <PostGround />
         </TabPane>
       </Tabs>

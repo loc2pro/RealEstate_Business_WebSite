@@ -321,7 +321,6 @@ export default function Post() {
       <Row>
         <Form enctype="multipart/form-data" style={{ width: "100%" }}>
           <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
-            <span> Đăng Bài</span>
             <a> Nhà ở/ Chung cư</a>
           </h1>
           <div class="contentform">
@@ -647,10 +646,10 @@ export default function Post() {
               </div>
               <div class="form-group">
                 <h3 class="title_sticky">Địa chỉ</h3>
-                <Row>
+                <Row style={{width:"100%"}}>
                   <Select
                     showSearch
-                    style={{ width: 250 }}
+                    style={{ width: 200 }}
                     placeholder="Chọn tỉnh/ Thành phố"
                     filterOption={(input, option) =>
                       option.label.toLowerCase().indexOf(input.toLowerCase()) >=
@@ -677,7 +676,7 @@ export default function Post() {
                   />
                   <Select
                     showSearch
-                    style={{ width: 230 }}
+                    style={{ width: 200 }}
                     placeholder="Chọn quận/ huyện"
                     filterOption={(input, option) =>
                       option.label.toLowerCase().indexOf(input.toLowerCase()) >=
@@ -703,7 +702,7 @@ export default function Post() {
 
                   <Select
                     showSearch
-                    style={{ width: 210 }}
+                    style={{ width: 200 }}
                     placeholder="Chọn phường/ xã"
                     filterOption={(input, option) =>
                       option.label.toLowerCase().indexOf(input.toLowerCase()) >=
@@ -851,11 +850,11 @@ export default function Post() {
           </div>
           <div className="row center">
             <button
-              style={{ width: "80%", fontWeight: "bold", fontSize: "30px" }}
+              style={{ width: "50%", fontWeight: "bold", fontSize: "30px" }}
               onClick={handleCreate}
               class="bouton-contact"
             >
-              Đăng Bài
+              Gữi Bài
             </button>
           </div>
         </Form>

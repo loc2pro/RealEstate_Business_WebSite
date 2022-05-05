@@ -148,6 +148,11 @@ function GroundAdmin(props) {
       width: 300,
     },
     {
+      title: "Kho",
+      dataIndex: "countInStock",
+      width: 150,
+    },
+    {
       title: "Giá",
       dataIndex: "price",
       sorter: (a, b) => a.price - b.price,

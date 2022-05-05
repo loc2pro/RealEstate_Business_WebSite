@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, Route, useParams } from "react-router-dom";
 import { listProductss } from "../actions/productActions";
@@ -8,8 +8,68 @@ import MessageBox from "../components/MessageBox";
 import SearchBox from "../components/SearchBox";
 import SearchProduct from "../components/SearchProduct";
 import { prices } from "../utils";
+import axios from "axios";
+import { Select, Input, Row, message, Button } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+const { Option } = Select;
 
 export default function SearchScreen(props) {
+  const [citys, setCitys] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+
+  const [city, setCity] = useState("");
+  const [district, setDistrict] = useState("");
+  const [ward, setWard] = useState("");
+  // const [address, setAddress] = useState("");
+  function GetCitys() {
+    axios
+      .get("https://provinces.open-api.vn/api/")
+      .then((res) => {
+        setCitys(res.data);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
+  function GetDistricts(code) {
+    axios
+      .get(`https://provinces.open-api.vn/api/p/${code}?depth=2`)
+      .then((res) => {
+        setDistricts(res.data.districts);
+        setCity(res.data.name);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
+  function GetWards(code) {
+    axios
+      .get(`https://provinces.open-api.vn/api/d/${code}?depth=2`)
+      .then((res) => {
+        setWards(res.data.wards);
+        setDistrict(res.data.name);
+      })
+      .catch((error) => {
+        message.error({
+          content: error,
+          duration: 2,
+        });
+      });
+  }
+
+  useEffect(() => {
+    GetCitys();
+  }, []);
+
   const {
     name = "all",
     type = "all",
@@ -17,6 +77,9 @@ export default function SearchScreen(props) {
     max = 0,
     order = "newest",
     pageNumber = 1,
+    City = "all",
+    District = "all",
+    Ward = "all",
   } = useParams();
   const dispatch = useDispatch();
   const list = useSelector((state) => state.list);
@@ -31,6 +94,9 @@ export default function SearchScreen(props) {
   useEffect(() => {
     dispatch(
       listProductss({
+        city: city,
+        district: district,
+        ward: ward,
         pageNumber,
         name: name !== "all" ? name : "",
         type: type !== "all" ? type : "",
@@ -39,16 +105,24 @@ export default function SearchScreen(props) {
         order,
       })
     );
-  }, [type, dispatch, max, min, name, order, pageNumber]);
+  }, [type, dispatch, max, min, name, order, pageNumber, city, district, ward]);
 
   const getFilterUrl = (filter) => {
+    const filterAddress = city || city;
     const filterPage = filter.page || pageNumber;
     const filterType = filter.type || type;
     const filterName = filter.name || name;
     const sortOrder = filter.order || order;
     const filterMin = filter.min ? filter.min : filter.min === 0 ? 0 : min;
     const filterMax = filter.max ? filter.max : filter.max === 0 ? 0 : max;
+    console.log(filterAddress);
+
     return `/search/type/${filterType}/name/${filterName}/min/${filterMin}/max/${filterMax}/order/${sortOrder}/pageNumber/${filterPage}`;
+  };
+  const handleResetAddress = () => {
+    setCity("");
+    setDistrict("");
+    setWard("");
   };
   return (
     <div>
@@ -72,6 +146,7 @@ export default function SearchScreen(props) {
                   style={{
                     backgroundColor: "#eee6ff",
                     height: "1000px",
+                    overflowY: "scroll",
                   }}
                 >
                   <div className="row" style={{ width: "100%" }}>
@@ -153,6 +228,147 @@ export default function SearchScreen(props) {
                             </li>
                           </Link>
                         ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="row" style={{ marginTop: "4rem" }}>
+                    <div className="container" style={{ width: "100%" }}>
+                      <h2
+                        style={{
+                          color: "red",
+                          borderBottom: "2px solid black",
+                          textAlign: "center",
+                        }}
+                      >
+                        Tìm kiếm theo địa chỉ
+                      </h2>
+                      <ul style={{ fontSize: "25px", marginLeft: "20px" }}>
+                        <Row
+                          style={{
+                            textAlign: "center",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Button
+                            type="primary"
+                            block
+                            onClick={(e) => handleResetAddress()}
+                          >
+                            Tất cả
+                          </Button>
+                          <span style={{ fontSize: "15px", marginTop: "2rem" }}>
+                            --- Chọn tỉnh/ thành phố ---
+                          </span>
+                          <Select
+                            showSearch
+                            style={{
+                              width: 240,
+                            }}
+                            placeholder="Chọn tỉnh/ thành phố"
+                            value={city}
+                            filterOption={(input, option) =>
+                              option.label
+                                .toLowerCase()
+                                .indexOf(input.toLowerCase()) >= 0
+                            }
+                            filterSort={(optionA, optionB) =>
+                              optionA.label
+                                .toLowerCase()
+                                .localeCompare(optionB.label.toLowerCase())
+                            }
+                            options={
+                              citys &&
+                              citys.map((value) => {
+                                return {
+                                  key: value.name,
+                                  label: value.name,
+                                  value: value.code,
+                                };
+                              })
+                            }
+                            onChange={(value) => {
+                              GetDistricts(value);
+                            }}
+                          />
+                          <span style={{ fontSize: "15px", marginTop: "2rem" }}>
+                            --- Chọn quận/ huyện ---
+                          </span>
+
+                          <Select
+                            showSearch
+                            style={{
+                              width: 240,
+                            }}
+                            placeholder="Chọn quận/ huyện"
+                            value={district}
+                            filterOption={(input, option) =>
+                              option.label
+                                .toLowerCase()
+                                .indexOf(input.toLowerCase()) >= 0
+                            }
+                            filterSort={(optionA, optionB) =>
+                              optionA.label
+                                .toLowerCase()
+                                .localeCompare(optionB.label.toLowerCase())
+                            }
+                            options={
+                              districts &&
+                              districts.map((value) => {
+                                return {
+                                  key: value.name,
+                                  label: value.name,
+                                  value: value.code,
+                                };
+                              })
+                            }
+                            onChange={(value) => GetWards(value)}
+                          />
+                          <span style={{ fontSize: "15px", marginTop: "2rem" }}>
+                            --- Chọn phường/ xã ---
+                          </span>
+                          <Select
+                            showSearch
+                            style={{
+                              width: 240,
+                            }}
+                            placeholder="Chọn phường/ xã"
+                            value={ward}
+                            filterOption={(input, option) =>
+                              option.label
+                                .toLowerCase()
+                                .indexOf(input.toLowerCase()) >= 0
+                            }
+                            filterSort={(optionA, optionB) =>
+                              optionA.label
+                                .toLowerCase()
+                                .localeCompare(optionB.label.toLowerCase())
+                            }
+                            options={
+                              wards &&
+                              wards.map((value) => {
+                                return {
+                                  key: value.name,
+                                  label: value.name,
+                                  value: value.name,
+                                };
+                              })
+                            }
+                            onChange={(value) => setWard(value)}
+                          />
+                          <Input
+                            size="large"
+                            style={{
+                              width: 240,
+                              marginTop: "2rem ",
+                            }}
+                            placeholder="Địa chỉ nhà nhận được"
+                            value={`${ward ? ward + " ," : ""}${
+                              district ? district + " ," : ""
+                            }${city}`}
+                          />
+                        </Row>
                       </ul>
                     </div>
                   </div>

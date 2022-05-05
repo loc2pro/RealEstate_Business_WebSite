@@ -228,7 +228,7 @@ function Sidenav({ color }) {
                 >
                   {browse}
                 </span>
-                <span className="label">Duyệt bài</span>
+                <span className="label">Quản li bài đăng</span>
               </NavLink>
             </Menu.Item>
             <Menu.Item key="3">
@@ -241,20 +241,7 @@ function Sidenav({ color }) {
                 >
                   {productList}
                 </span>
-                <span className="label">Sản phẩm</span>
-              </NavLink>
-            </Menu.Item>
-            <Menu.Item key="4">
-              <NavLink to="/admin/assignment">
-                <span
-                  className="icon"
-                  style={{
-                    background: page === "assignment" ? color : "",
-                  }}
-                >
-                  {assignment}
-                </span>
-                <span className="label">Phân công</span>
+                <span className="label">Quản lí sản phẩm</span>
               </NavLink>
             </Menu.Item>
             <Menu.Item key="5">
@@ -267,7 +254,7 @@ function Sidenav({ color }) {
                 >
                   {user}
                 </span>
-                <span className="label">Người dùng</span>
+                <span className="label">Quản lí người dùng</span>
               </NavLink>
             </Menu.Item>
             <Menu.Item key="6">
@@ -280,7 +267,7 @@ function Sidenav({ color }) {
                 >
                   {employee}
                 </span>
-                <span className="label">Nhân viên</span>
+                <span className="label">Quản lí nhân viên</span>
               </NavLink>
             </Menu.Item>
           </div>

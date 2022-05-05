@@ -182,7 +182,7 @@ function BrowseScreen() {
           marginLeft: "2rem",
         }}
       >
-        Duyệt sản phẩm
+        Đăng sản phẩm
       </h3>
       <Tabs
         defaultActiveKey="1"
@@ -213,7 +213,7 @@ function BrowseScreen() {
                 onEditProduct();
               }}
             >
-              Duyệt bài
+              Đăng bài
             </Button>
           ) : (
             <Button
@@ -229,7 +229,7 @@ function BrowseScreen() {
                 onEditProduct();
               }}
             >
-              Duyệt bài
+              Đăng bài
             </Button>
           )}
         </TabPane>
@@ -256,7 +256,7 @@ function BrowseScreen() {
                 onEditGround();
               }}
             >
-              Duyệt bài
+              Đăng bài
             </Button>
           ) : (
             <Button
@@ -272,7 +272,7 @@ function BrowseScreen() {
                 onEditGround();
               }}
             >
-              Duyệt bài
+              Đăng bài
             </Button>
           )}
         </TabPane>
