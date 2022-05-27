@@ -1272,7 +1272,6 @@ img {
 .footer-menu ul {
   margin: 0px;
   padding: 0px;
-  display: flex;
   align-items: center;
   justify-content: flex-end;
 }
@@ -3024,4 +3023,26 @@ section.ant-layout.ant-layout-has-sider.layout-dashboard.layout-profile
   svg
   path {
   fill: #8c8c8c;
+}
+
+.ant-table-thead > tr > th {
+  background-color: rgb(102, 142, 202) !important;
+  color: white;
+}
+.ant-table-cell {
+  border: solid 1px rgb(147, 164, 184);
+  font-weight: bold;
+}
+/* custom */
+.custom-antd-input{
+  border-radius: 10px !important;
+  margin-bottom: 5px !important;
+}
+
+.custom-antd-input .ant-input-prefix{
+  height: 40px !important;
+}
+
+.custom-antd-input .ant-input{
+  height: 40px !important;
 }

@@ -7,7 +7,7 @@ import {
   CART_SAVE_PAYMENT_METHOD,
 } from "../constants/cartConstants";
 
-export const addToCart = (productId, qty) => async (dispatch, getState) => {
+export const addToCart = (productId) => async (dispatch, getState) => {
   const { data } = await Axios.get(`${api}/api/products/${productId}`);
   dispatch({
     type: CART_ADD_ITEM,
@@ -17,30 +17,24 @@ export const addToCart = (productId, qty) => async (dispatch, getState) => {
       price: data.product.price,
       countInStock: data.product.countInStock,
       product: data.product._id,
-      qty,
     },
   });
   localStorage.setItem("cartItems", JSON.stringify(getState().cart.cartItems));
 };
-export const addGroundToCart =
-  (groundId, qty) => async (dispatch, getState) => {
-    const { data } = await Axios.get(`${api}/api/grounds/${groundId}`);
-    dispatch({
-      type: CART_ADD_ITEM,
-      payload: {
-        name: data.ground.name,
-        image: data.ground.image,
-        price: data.ground.price,
-        product: data.ground._id,
-        type: data.ground.type,
-        qty,
-      },
-    });
-    localStorage.setItem(
-      "cartItems",
-      JSON.stringify(getState().cart.cartItems)
-    );
-  };
+export const addGroundToCart = (groundId) => async (dispatch, getState) => {
+  const { data } = await Axios.get(`${api}/api/grounds/${groundId}`);
+  dispatch({
+    type: CART_ADD_ITEM,
+    payload: {
+      name: data.ground.name,
+      image: data.ground.image,
+      price: data.ground.price,
+      product: data.ground._id,
+      type: data.ground.type,
+    },
+  });
+  localStorage.setItem("cartItems", JSON.stringify(getState().cart.cartItems));
+};
 
 export const removeFromCart = (productId) => (dispatch, getState) => {
   dispatch({ type: CART_REMOVE_ITEM, payload: productId });

@@ -4,9 +4,11 @@ import { Provider } from "react-redux";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import "react-responsive-carousel/lib/styles/carousel.min.css";
 import "antd/dist/antd.css";
 import store from "./store";
+
+import "./assets/styles/main.css";
+import "./assets/styles/responsive.css";
 
 ReactDOM.render(
   <Provider store={store}>
@@ -15,7 +17,7 @@ ReactDOM.render(
     </React.StrictMode>
     ,
   </Provider>,
-  document.getElementById("root")
+  document.getElementById("quarter")
 );
 
 reportWebVitals();

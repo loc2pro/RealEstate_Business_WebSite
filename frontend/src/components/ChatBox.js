@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import socketIOClient from "socket.io-client";
 import styled from "styled-components";
 import Robot from "../assets/robot.gif";
-
+import { MessageOutlined } from "@ant-design/icons";
 const ENDPOINT =
   window.location.host.indexOf("localhost") >= 0
     ? "http://127.0.0.1:5000"
@@ -80,13 +80,29 @@ export default function ChatBox(props) {
     setIsOpen(false);
   };
   return (
-    <div className="chatbox">
+    <div
+      className="chatbox"
+      style={{ position: "fixed", right: "1rem", bottom: "1rem" }}
+    >
       {!isOpen ? (
-        <button type="button" onClick={supportHandler}>
-          <i class="fas fa-life-ring"></i>
-        </button>
+        // <button
+        //   type="button"
+        //   onClick={supportHandler}
+        //   style={{ height: "40px", width: "200px", background: "black" }}
+        // >
+        //   <MessageOutlined /> Hổ Trợ Khách Hàng
+        // </button>
+        <div class="hotline hidden-xs" onClick={supportHandler}>
+          <img
+            class="faa-wrench animated"
+            src="https://3.bp.blogspot.com/-aWi0lzt8L28/Wd7bmhSlYXI/AAAAAAAAAbY/FFCLiSZq8DwIfUYsflce-uz9qvPYpfC8wCLcBGAs/s1600/phone.png"
+          />
+          <div class="hotline-no">
+            <a>Hổ trợ khách hàng</a>
+          </div>
+        </div>
       ) : (
-        <div className="card card-body">
+        <div className="card card-body" >
           <div className="row">
             <div
               className="col-10"
@@ -107,7 +123,14 @@ export default function ChatBox(props) {
               <button
                 type="button"
                 onClick={closeHandler}
-                style={{ float: "right" }}
+                style={{
+                  float: "right",
+                  height: "50px",
+                  width: "50px",
+                  background: "orange",
+                  borderRadius: "50%",
+                  margin: "0.5rem",
+                }}
               >
                 <i class="fas fa-times-circle"></i>
               </button>
@@ -125,7 +148,7 @@ export default function ChatBox(props) {
                         }`}
                       >
                         <div className="content ">
-                          <p style={{fontSize:"17px"}}>{message.body}</p>
+                          <p style={{ fontSize: "17px" }}>{message.body}</p>
                         </div>
                       </div>
                     </div>
@@ -133,23 +156,21 @@ export default function ChatBox(props) {
                 })}
               </div>
             </Container>
-            {/* {messages.map((msg, index) => (
-              <li key={index}>
-                <strong style={{ float: "left" }}>{`${msg.name}:`}</strong>
-                &nbsp;
-                {msg.body}
-              </li>
-            ))} */}
           </ul>
           <div>
-            <form onSubmit={submitHandler} className="row">
-              <input
-                value={messageBody}
-                onChange={(e) => setMessageBody(e.target.value)}
-                type="text"
-                placeholder="Tin nhắn"
-              />
-              <button style={{ width: "100%" }} type="submit">
+            <form onSubmit={submitHandler}>
+              <div className="row">
+                <input
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  type="text"
+                  placeholder="Tin nhắn"
+                />
+              </div>
+              <button
+                type="submit"
+                style={{ width: "100%", height: "50px", background: "orange" ,borderRadius:"20px"}}
+              >
                 Gữi
               </button>
             </form>
@@ -188,7 +209,6 @@ const Container = styled.div`
     }
   }
   .chat-messages {
-    padding: 1rem 2rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -219,13 +239,14 @@ const Container = styled.div`
     .sended {
       justify-content: flex-end;
       .content {
-        background-color: white;
+        background-color: black;
+        color: black;
       }
     }
     .recieved {
       justify-content: flex-start;
       .content {
-        background-color: #9900ff20;
+        background-color: #0099ff;
       }
     }
   }

@@ -123,7 +123,6 @@ export default function Profile() {
                           onChange={(e) => setName(e.target.value)}
                           value={name}
                           size="large"
-                          prefix={<i class="fas fa-user"></i>}
                           style={{
                             width: "100%",
                             fontSize: "30px",
@@ -141,7 +140,6 @@ export default function Profile() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           size="large"
-                          prefix={<i class="fas fa-at"></i>}
                           style={{
                             width: "100%",
                             fontSize: "30px",
@@ -160,7 +158,6 @@ export default function Profile() {
                           value={phone}
                           size="large"
                           placeholder="09xxxxxxxx"
-                          prefix={<i class="fas fa-phone-alt"></i>}
                           style={{
                             width: "100%",
                             fontSize: "30px",
@@ -178,7 +175,6 @@ export default function Profile() {
                           value={address}
                           size="large"
                           placeholder="Địa chỉ"
-                          prefix={<i class="fas fa-map-marked"></i>}
                           style={{
                             width: "100%",
                             fontSize: "30px",
@@ -197,7 +193,6 @@ export default function Profile() {
                           onChange={(e) => setPassword(e.target.value)}
                           size="large"
                           placeholder="********"
-                          prefix={<i class="fas fa-key"></i>}
                           style={{
                             width: "100%",
                             fontSize: "30px",
@@ -216,7 +211,6 @@ export default function Profile() {
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           size="large"
                           placeholder="*********"
-                          prefix={<i class="fas fa-key"></i>}
                           style={{
                             width: "100%",
                             fontSize: "30px",

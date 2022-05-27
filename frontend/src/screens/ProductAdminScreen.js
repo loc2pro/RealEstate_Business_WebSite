@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { listProducts } from "../actions/productActions";
+import { listProducts, listProductsAdmin } from "../actions/productActions";
 import ProductAdmin from "../components/ProductAdmin";
 import { Button, Modal, notification, Row, Table, Tabs } from "antd";
 import { listGrounds } from "../actions/groundActions";
@@ -10,13 +10,13 @@ const { TabPane } = Tabs;
 
 function ProductAdminScreen() {
   const dispatch = useDispatch();
-  const productList = useSelector((state) => state.productList);
-  const { loading, error, products } = productList;
+  const listAdmin = useSelector((state) => state.listAdmin);
+  const { loading, error, products } = listAdmin;
   const groundList = useSelector((state) => state.groundList);
   const { loading: loadingGround, error: errorGround, grounds } = groundList;
   // List Product
   useEffect(() => {
-    dispatch(listProducts());
+    dispatch(listProductsAdmin());
   }, [dispatch]);
   // List Ground
   useEffect(() => {

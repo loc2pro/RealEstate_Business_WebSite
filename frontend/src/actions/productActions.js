@@ -17,6 +17,9 @@ import {
   POST_PRODUCT_FAIL,
   POST_PRODUCT_REQUEST,
   POST_PRODUCT_SUCCESS,
+  PRODUCT_ADMIN_LIST_FAIL,
+  PRODUCT_ADMIN_LIST_REQUEST,
+  PRODUCT_ADMIN_LIST_SUCCESS,
   PRODUCT_CATEGORY_LIST_FAIL,
   PRODUCT_CATEGORY_LIST_REQUEST,
   PRODUCT_CATEGORY_LIST_SUCCESS,
@@ -48,6 +51,8 @@ import {
 
 export const listProductss =
   ({
+    status = "",
+    direction = "",
     city = "",
     district = "",
     ward = "",
@@ -64,7 +69,7 @@ export const listProductss =
     });
     try {
       const { data } = await Axios.get(
-        `${api}/api/products/product?pageNumber=${pageNumber}&name=${name}&type=${type}&ward=${ward}&district=${district}&city=${city}&min=${min}&max=${max}&order=${order}`
+        `${api}/api/products/product?pageNumber=${pageNumber}&name=${name}&type=${type}&status=${status}&direction=${direction}&ward=${ward}&district=${district}&city=${city}&min=${min}&max=${max}&order=${order}`
       );
       dispatch({ type: PRODUCT_LIST_SUCCESS_TEST, payload: data });
     } catch (error) {
@@ -92,6 +97,18 @@ export const listProducts = () => async (dispatch) => {
     dispatch({ type: PRODUCT_LIST_SUCCESS, payload: data });
   } catch (error) {
     dispatch({ type: PRODUCT_LIST_FAIL, payload: error.message });
+  }
+};
+
+export const listProductsAdmin = () => async (dispatch) => {
+  dispatch({
+    type: PRODUCT_ADMIN_LIST_REQUEST,
+  });
+  try {
+    const { data } = await Axios.get(`${api}/api/products/productAdmin`);
+    dispatch({ type: PRODUCT_ADMIN_LIST_SUCCESS, payload: data });
+  } catch (error) {
+    dispatch({ type: PRODUCT_ADMIN_LIST_FAIL, payload: error.message });
   }
 };
 
@@ -136,19 +153,19 @@ export const postProduct = (newProduct) => async (dispatch) => {
       `${api}/api/products/createProducts`,
       newProduct
     );
-
     if (data.success) {
       dispatch({ type: POST_PRODUCT_SUCCESS, payload: data });
     } else {
       dispatch({ type: POST_PRODUCT_FAIL });
-      return { success: false, message: "Vui lòng kiểm tra thông tin" };
+      return { success: false, message: data.message };
     }
     return data;
   } catch (error) {
     dispatch({
       type: POST_PRODUCT_FAIL,
     });
-    return { success: false, message: error.message };
+    const { response } = error;
+    return { success: false, message: response.data.message };
   }
 };
 //Xóa bài của admin

@@ -41,6 +41,9 @@ import {
   PRODUCT_DELETE_REQUEST,
   PRODUCT_DELETE_SUCCESS,
   PRODUCT_DELETE_FAIL,
+  PRODUCT_ADMIN_LIST_REQUEST,
+  PRODUCT_ADMIN_LIST_SUCCESS,
+  PRODUCT_ADMIN_LIST_FAIL,
 } from "../constants/productConstants";
 
 export const ListReducer = (
@@ -275,6 +278,22 @@ export const assignmentReducer = (
     case ASSIGNMENT_SUCCEESS:
       return { loading: false, success: true, products: action.payload };
     case ASSIGNMENT_FAIL:
+      return { loading: false, error: action.payload };
+    default:
+      return state;
+  }
+};
+//product admin
+export const ListAdminReducer = (
+  state = { loading: true, products: [] },
+  action
+) => {
+  switch (action.type) {
+    case PRODUCT_ADMIN_LIST_REQUEST:
+      return { loading: true };
+    case PRODUCT_ADMIN_LIST_SUCCESS:
+      return { loading: false, products: action.payload };
+    case PRODUCT_ADMIN_LIST_FAIL:
       return { loading: false, error: action.payload };
     default:
       return state;

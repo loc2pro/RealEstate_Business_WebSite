@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   DollarCircleOutlined,
   EyeOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import {
   Input,
@@ -31,6 +32,8 @@ function ProductAdmin(props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [dataSource, setDataSource] = useState();
+  const [keySearch, setkeySearch] = useState("");
+
   useEffect(() => {
     setDataSource(products);
   }, [products]);
@@ -211,11 +214,27 @@ function ProductAdmin(props) {
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
         <div>
+          <Input
+            onChange={(e) => {
+              const value = e.target.value;
+              setkeySearch(value);
+            }}
+            className="custom-antd-input"
+            placeholder="Tìm kím theo tên sản phẩm, loại, trạng thái"
+            prefix={<SearchOutlined />}
+            size="small"
+          ></Input>
           <Table
             columns={columns}
-            dataSource={dataSource}
-            pagination={{ pageSize: 10 }}
-            scroll={{ x: 2000, y: 500 }}
+            dataSource={dataSource?.filter(
+              (data) =>
+                !keySearch ||
+                data.name.toLowerCase().includes(keySearch.toLowerCase()) ||
+                data.type.toLowerCase().includes(keySearch.toLowerCase()) ||
+                data.status.toLowerCase().includes(keySearch.toLowerCase())
+            )}
+            pagination={{ pageSize: 20 }}
+            scroll={{ x: 2000, y: 800 }}
           />
           <Modal
             title="Chỉnh sửa sản phẩm "
@@ -237,7 +256,7 @@ function ProductAdmin(props) {
                     Tên sản phẩm:
                   </h3>
                   <Input
-                    style={{ height: "35px" }}
+                    style={{ height: "35px", marginBottom: "0" }}
                     value={editingProduct?.name}
                     onChange={(e) => {
                       setEditingProduct((pre) => {

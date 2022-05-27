@@ -266,7 +266,7 @@ function Header({
   const dispatch = useDispatch();
   const signoutHandler = () => {
     dispatch(signout());
-    history.push("/signin");
+    history.push("/login");
   };
 
   return (
@@ -425,23 +425,21 @@ function Header({
             </div>
           </Drawer>
           {userInfo ? (
-            <div>
-              <div className="dropdown">
-                <a href="#" style={{ fontSize: "20px" }}>
-                  {profile} {userInfo.name} <i className="fa fa-caret-down"></i>
-                </a>
-                <ul className="dropdown-content">
-                  <li>
-                    <a
-                      href="/signin"
-                      onClick={signoutHandler}
-                      style={{ fontSize: "20px" }}
-                    >
-                      Đăng Xuất
-                    </a>
-                  </li>
-                </ul>
-              </div>
+            <div className="ltn__drop-menu user-menu">
+              <ul>
+                <li>
+                  <Link to="#">
+                    <i className="icon-user" />
+                  </Link>
+                  <ul className="go-top">
+                    <li>
+                      <Link to="/login" onClick={signoutHandler}>
+                        Đăng Xuất
+                      </Link>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
             </div>
           ) : (
             <Link to="/sign-in" style={{ fontSize: "20px", color: "white" }}>
@@ -450,7 +448,7 @@ function Header({
           )}
           <Input
             className="header-search"
-            placeholder="Type here..."
+            placeholder="Nhập ở đây ..."
             prefix={<SearchOutlined />}
           />
         </Col>

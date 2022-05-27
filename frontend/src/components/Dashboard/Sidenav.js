@@ -199,7 +199,9 @@ function Sidenav({ color }) {
     <>
       <div className="brand">
         <img src={logo} alt="" />
-        <span>Muse Dashboard</span>
+        <span style={{ color: "red", fontWeight: "bold" }}>
+          QUẢN LÝ BĐS PHÁT LỘC
+        </span>
       </div>
       <hr />
       <Menu theme="light" mode="inline">
@@ -315,33 +317,6 @@ function Sidenav({ color }) {
             </Menu.Item>
           </div>
         )}
-
-        <Menu.Item key="6">
-          <NavLink to="/tables">
-            <span
-              className="icon"
-              style={{
-                background: page === "tables" ? color : "",
-              }}
-            >
-              {tables}
-            </span>
-            <span className="label">Tables</span>
-          </NavLink>
-        </Menu.Item>
-        <Menu.Item key="3">
-          <NavLink to="/billing">
-            <span
-              className="icon"
-              style={{
-                background: page === "billing" ? color : "",
-              }}
-            >
-              {billing}
-            </span>
-            <span className="label">Billing</span>
-          </NavLink>
-        </Menu.Item>
         <Menu.Item key="4">
           <NavLink to="/rtl">
             <span
@@ -356,7 +331,7 @@ function Sidenav({ color }) {
           </NavLink>
         </Menu.Item>
         <Menu.Item className="menu-item-header" key="5">
-          Account Pages
+          TÀI KHOẢN
         </Menu.Item>
         <Menu.Item key="6">
           <NavLink to="/profileSeller">
@@ -382,10 +357,10 @@ function Sidenav({ color }) {
           <span className="icon" style={{ color }}>
             {dashboard}
           </span>
-          <h6>Need Help?</h6>
-          <p>Please check our docs</p>
+          <h6>Hổ Trợ ?</h6>
+          <p>phone: 0981074090</p>
           <Button type="primary" className="ant-btn-sm ant-btn-block">
-            DOCUMENTATION
+            LIÊN HỆ
           </Button>
         </div>
       </div>

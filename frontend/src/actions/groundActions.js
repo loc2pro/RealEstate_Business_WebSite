@@ -48,14 +48,25 @@ import {
 import { PRODUCT_UPDATE_FAIL } from "../constants/productConstants";
 
 export const listGroundss =
-  ({ pageNumber = "", name = "", type = "", order = "", min = 0, max = 0 }) =>
+  ({
+    status = "",
+    city = "",
+    district = "",
+    ward = "",
+    pageNumber = "",
+    name = "",
+    type = "",
+    order = "",
+    min = 0,
+    max = 0,
+  }) =>
   async (dispatch) => {
     dispatch({
       type: GROUND_LIST_REQUEST_TEST,
     });
     try {
       const { data } = await Axios.get(
-        `${api}/api/grounds/ground?pageNumber=${pageNumber}&name=${name}&type=${type}&min=${min}&max=${max}&order=${order}`
+        `${api}/api/grounds/ground?pageNumber=${pageNumber}&name=${name}&type=${type}&status=${status}&ward=${ward}&district=${district}&city=${city}&min=${min}&max=${max}&order=${order}`
       );
       dispatch({ type: GROUND_LIST_SUCCESS_TEST, payload: data });
     } catch (error) {
@@ -103,7 +114,19 @@ export const detailsGround = (groundId) => async (dispatch) => {
   }
 };
 export const postGround =
-  (newGround, address, district, ward, city, lat, lng, listImages) =>
+  (
+    newGround,
+    type,
+    status,
+    legalDocuments,
+    address,
+    district,
+    ward,
+    city,
+    lat,
+    lng,
+    listImages
+  ) =>
   async (dispatch) => {
     dispatch({ type: POST_GROUND_REQUEST });
 
@@ -116,6 +139,9 @@ export const postGround =
         city,
         lat,
         lng,
+        type,
+        status,
+        legalDocuments,
         listImages,
       });
 
@@ -123,14 +149,15 @@ export const postGround =
         dispatch({ type: POST_GROUND_SUCCESS, payload: data });
       } else {
         dispatch({ type: POST_GROUND_FAIL });
-        return { success: false, message: "Đăng sản phẩm thất bại" };
+        return { success: false, message: data.message };
       }
       return data;
     } catch (error) {
       dispatch({
         type: POST_GROUND_FAIL,
       });
-      return { success: false, message: error.message };
+      const { response } = error;
+      return { success: false, message: response.data.message };
     }
   };
 

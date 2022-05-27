@@ -4,13 +4,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@autocomplete/material-ui": "0.0.17",
     "@emotion/react": "^11.8.1",
     "@emotion/styled": "^11.8.1",
-    "@material-ui/core": "^4.12.3",
-    "@material-ui/icons": "^4.11.2",
-    "@material-ui/lab": "^4.0.0-alpha.60",
-    "@mui/material": "^5.5.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
@@ -26,9 +21,11 @@
     "file-saver": "^2.0.5",
     "form-data": "^4.0.0",
     "google-maps-react": "^2.0.6",
+    "html-react-parser": "^0.10.1",
     "jquery": "^3.6.0",
     "leaflet": "^1.7.1",
     "mapbox-gl": "^1.13.0",
+    "owl.carousel": "^2.3.4",
     "react": "^17.0.2",
     "react-apexcharts": "^1.3.9",
     "react-bootstrap": "^2.1.2",
@@ -41,12 +38,14 @@
     "react-paypal-button-v2": "^2.6.3",
     "react-places-autocomplete": "^7.3.0",
     "react-redux": "^7.2.5",
-    "react-responsive-carousel": "^3.2.22",
+    "react-responsive-carousel": "^3.2.23",
     "react-router-dom": "^5.3.0",
     "react-scripts": "4.0.3",
+    "react-to-print": "^2.14.7",
     "react-toastify": "^8.2.0",
     "redux": "^4.1.1",
     "redux-thunk": "^2.3.0",
+    "sass": "^1.52.1",
     "socket.io-client": "^4.4.1",
     "styled-components": "^5.3.3",
     "uuid": "^8.3.2",
@@ -79,6 +78,7 @@
     ]
   },
   "devDependencies": {
-    "@ant-design/icons": "^4.7.0"
+    "@ant-design/icons": "^4.7.0",
+    "eslint-plugin-react-hooks": "^4.5.0"
   }
 }

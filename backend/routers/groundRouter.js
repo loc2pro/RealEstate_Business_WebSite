@@ -12,10 +12,14 @@ const upload = multer();
 groundRouter.get(
   "/ground",
   expressAsyncHandler(async (req, res) => {
-    const pageSize = 99999999999999999;
+    const pageSize = 4;
     const page = Number(req.query.pageNumber) || 1;
     const name = req.query.name || "";
+    const city = req.query.city || "";
+    const district = req.query.district || "";
+    const ward = req.query.ward || "";
     const type = req.query.type || "";
+    const status = req.query.status || "";
     const order = req.query.order || "";
     const min =
       req.query.min && Number(req.query.min) !== 0 ? Number(req.query.min) : 0;
@@ -24,6 +28,10 @@ groundRouter.get(
 
     const nameFilter = name ? { name: { $regex: name, $options: "i" } } : {};
     const typeFilter = type ? { type } : {};
+    const statusFilter = status ? { status } : {};
+    const cityFilter = city ? { city } : {};
+    const districtFilter = district ? { district } : {};
+    const wardFilter = ward ? { ward } : {};
     const priceFilter = min && max ? { price: { $gte: min, $lte: max } } : {};
     const sortOrder =
       order === "lowest"
@@ -35,15 +43,26 @@ groundRouter.get(
         : { _id: -1 };
     const count = await Ground.count({
       ...nameFilter,
+      ...cityFilter,
+      ...districtFilter,
+      ...wardFilter,
       ...typeFilter,
       ...priceFilter,
+      ...statusFilter,
     });
     const grounds = await Ground.find({
       ...nameFilter,
+      ...cityFilter,
+      ...districtFilter,
+      ...wardFilter,
       ...typeFilter,
       ...priceFilter,
+      ...statusFilter,
+      browse: true,
+      countInStock: 1,
     })
       .sort(sortOrder)
+      .populate("seller", "name email phone seller")
       .skip(pageSize * (page - 1))
       .limit(pageSize);
     res.send({ grounds, page, pages: Math.ceil(count / pageSize) });
@@ -60,7 +79,10 @@ groundRouter.get(
 groundRouter.get(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const grounds = await Ground.find({});
+    const grounds = await Ground.find().populate(
+      "seller",
+      "name email phone seller"
+    );
     res.send(grounds);
   })
 );
@@ -85,6 +107,8 @@ groundRouter.get(
   "/:id",
   expressAsyncHandler(async (req, res) => {
     await Ground.findById(req.params.id)
+      .populate("seller", "name email phone seller")
+      .populate("user", "name email phone")
       .then(async (ground) => {
         await User.findById(ground.user)
           .then((user) => {
@@ -107,17 +131,8 @@ groundRouter.get(
 groundRouter.post(
   "/createGrounds",
   expressAsyncHandler(async (req, res) => {
-    const {
-      name,
-      user,
-      status,
-      type,
-      description,
-      countInStock,
-      price,
-      acreage,
-      legalDocuments,
-    } = req.body.newGround;
+    const { name, user, description, countInStock, price, acreage } =
+      req.body.newGround;
     const image = req.body.listImages;
     const lat = req.body.lat;
     const lng = req.body.lng;
@@ -125,6 +140,16 @@ groundRouter.post(
     const ward = req.body.ward;
     const city = req.body.city;
     const district = req.body.district;
+    const status = req.body.status;
+    const legalDocuments = req.body.legalDocuments;
+    const type = req.body.type;
+    console.log(req.body);
+    if (!image) {
+      return res.status(400).json({
+        success: false,
+        message: `Vui lòng thêm hình ảnh.`,
+      });
+    }
 
     await Ground.insertMany({
       name: name,

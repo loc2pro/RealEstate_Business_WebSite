@@ -1,4 +1,9 @@
-import { DeleteOutlined, EyeOutlined, CheckOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EyeOutlined,
+  CheckOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import {
   Input,
   Modal,
@@ -23,6 +28,7 @@ function BrowseGround(props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [selectedRowKeys, SetSelectedRowkeys] = useState([]);
+  const [keySearch, setkeySearch] = useState("");
   const [dataSource, setDataSource] = useState();
   useEffect(() => {
     parentCallback(selectedRowKeys);
@@ -214,9 +220,25 @@ function BrowseGround(props) {
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
         <div>
+          <Input
+            onChange={(e) => {
+              const value = e.target.value;
+              setkeySearch(value);
+            }}
+            className="custom-antd-input"
+            placeholder="Tìm kím theo tên sản phẩm, loại, trạng thái"
+            prefix={<SearchOutlined />}
+            size="small"
+          ></Input>
           <Table
             columns={columns}
-            dataSource={data}
+            dataSource={data?.filter(
+              (data) =>
+                !keySearch ||
+                data.name.toLowerCase().includes(keySearch.toLowerCase()) ||
+                data.type.toLowerCase().includes(keySearch.toLowerCase()) ||
+                data.status.toLowerCase().includes(keySearch.toLowerCase())
+            )}
             rowSelection={rowSelection}
             pagination={{ pageSize: 10 }}
             scroll={{ x: 2000, y: 500 }}

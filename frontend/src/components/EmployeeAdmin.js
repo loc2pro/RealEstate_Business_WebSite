@@ -1,10 +1,17 @@
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import {
+  DeleteOutlined,
+  DollarOutlined,
+  EditOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import {
+  Form,
   Input,
   Modal,
   notification,
   Popconfirm,
   Row,
+  Select,
   Space,
   Table,
   Upload,
@@ -16,10 +23,13 @@ import { useDispatch } from "react-redux";
 import {
   createSellerAdmin,
   deleteSellerAdmin,
+  paymentSalarySellerAdmin,
   updateSellerAdmin,
 } from "../actions/userActions";
 import LoadingBox from "./LoadingBox";
 import MessageBox from "./MessageBox";
+const { Option } = Select;
+
 const { TextArea } = Input;
 function getBase64(file) {
   return new Promise((resolve, reject) => {
@@ -30,20 +40,28 @@ function getBase64(file) {
   });
 }
 function EmployeeAdmin(props) {
-  const { sellers, loading, error } = props;
+  const { sellers, loading, error, parentCallback } = props;
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSalary, setIsSalary] = useState(false);
   const [isCreate, setIsCreate] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [createUser, setCreateUser] = useState(null);
   const [dataSource, setDataSource] = useState();
+  const [salary, setSalary] = useState();
+
   const [fileList, setFileList] = useState([]);
   const [images, setImages] = useState([]);
   const [previewVisible, SetPreviewVisible] = useState(false);
   const [previewImage, SetPreviewImage] = useState("");
+  const [keySearch, setkeySearch] = useState("");
+
   useEffect(() => {
     setDataSource(sellers);
   }, [sellers]);
+  useEffect(() => {
+    parentCallback(salary);
+  }, [salary]);
 
   const handleDeleteClick = (id) => {
     console.log(id);
@@ -67,6 +85,13 @@ function EmployeeAdmin(props) {
   const resetCreate = () => {
     setIsCreate(false);
     setCreateUser(null);
+  };
+
+  const onSalary = () => {
+    setIsSalary(true);
+  };
+  const resetSalary = () => {
+    setIsSalary(false);
   };
 
   const handleCreateClick = (e) => {
@@ -121,6 +146,33 @@ function EmployeeAdmin(props) {
               }
             });
           });
+        } else {
+          notification.warning({
+            description: data.message,
+            placement: "bottomRight",
+            duration: 3,
+          });
+        }
+      })
+      .catch((err) => {
+        notification.error({
+          description: err.message,
+          placement: "bottomRight",
+          duration: 3,
+        });
+      });
+  };
+  const handleSalaryClick = (e) => {
+    const payment = dispatch(paymentSalarySellerAdmin(e));
+    payment
+      .then((data) => {
+        if (data.success) {
+          notification.success({
+            description: data.message,
+            placement: "bottomRight",
+            duration: 3,
+          });
+          setSalary(data);
         } else {
           notification.warning({
             description: data.message,
@@ -226,26 +278,39 @@ function EmployeeAdmin(props) {
     {
       title: "Tên người dùng",
       dataIndex: "name",
+      width: 200,
+      fixed: "left",
     },
     {
       title: "Lương cơ bản",
       dataIndex: ["seller", "salary"],
+      width: 200,
+    },
+    {
+      title: "Thưởng hoa hồng",
+      dataIndex: ["seller", "bonus"],
+      width: 200,
     },
     {
       title: "email",
       dataIndex: "email",
+      width: 200,
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
+      width: 200,
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
+      width: 400,
     },
 
     {
       title: "Action",
+      width: 100,
+      fixed: "right",
       key: "action",
       render: (record) => (
         <Space size="middle">
@@ -264,10 +329,30 @@ function EmployeeAdmin(props) {
               <DeleteOutlined style={{ color: "red", marginLeft: 12 }} />
             </a>
           </Popconfirm>
+          <Popconfirm
+            title="Xác nhận thanh toán lương cho nhân viên ?"
+            onConfirm={() => handleSalaryClick(record._id)}
+          >
+            <a>
+              <DollarOutlined style={{ color: "green", marginLeft: 12 }} />
+            </a>
+          </Popconfirm>
         </Space>
       ),
     },
   ];
+  const prefixSelector = (
+    <Form.Item name="prefix" noStyle>
+      <Select
+        defaultValue="+84"
+        style={{
+          width: 100,
+        }}
+      >
+        <Option value="84">+84</Option>
+      </Select>
+    </Form.Item>
+  );
   return (
     <div>
       {loading ? (
@@ -276,13 +361,35 @@ function EmployeeAdmin(props) {
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
         <div>
-          <button
-            onClick={onCreateUser}
-            style={{ float: "right", margin: "0 0 5px" }}
-          >
-            Thêm nhân viên
-          </button>
-          <Table columns={columns} dataSource={dataSource} />
+          <div className="btn-wrapper animated ">
+            <button
+              onClick={onCreateUser}
+              className="theme-btn-1 btn btn-effect-1 go-top"
+              style={{ float: "right", margin: "0 10px 5px" }}
+            >
+              Thêm nhân viên
+            </button>
+          </div>
+          <Input
+            onChange={(e) => {
+              const value = e.target.value;
+              setkeySearch(value);
+            }}
+            className="custom-antd-input"
+            placeholder="Tìm kím theo tên nhân viên"
+            prefix={<SearchOutlined />}
+            size="small"
+          ></Input>
+          <Table
+            columns={columns}
+            dataSource={dataSource?.filter(
+              (data) =>
+                !keySearch ||
+                data.name.toLowerCase().includes(keySearch.toLowerCase())
+            )}
+            scroll={{ x: 2000, y: 800 }}
+            pagination={{ pageSize: 20 }}
+          />
           <Modal
             title="Chỉnh sửa nhân viên"
             visible={isEditing}
@@ -303,7 +410,7 @@ function EmployeeAdmin(props) {
                     Tên nhân viên:
                   </h3>
                   <Input
-                    style={{ height: "35px" }}
+                    size="large"
                     value={editingUser?.name}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -317,7 +424,7 @@ function EmployeeAdmin(props) {
                     Lương cơ bản:
                   </h5>
                   <Input
-                    style={{ height: "35px" }}
+                    size="large"
                     value={editingUser?.seller?.salary}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -334,7 +441,7 @@ function EmployeeAdmin(props) {
                     Email:
                   </h5>
                   <Input
-                    style={{ height: "35px" }}
+                    size="large"
                     value={editingUser?.email}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -352,7 +459,8 @@ function EmployeeAdmin(props) {
 
                   <Input
                     type="number"
-                    style={{ height: "35px" }}
+                    className="custom-ant-input"
+                    size="large"
                     value={editingUser?.phone}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -366,7 +474,7 @@ function EmployeeAdmin(props) {
                     Địa chỉ:
                   </h5>
                   <Input
-                    style={{ height: "35px" }}
+                    size="large"
                     value={editingUser?.address}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -382,23 +490,33 @@ function EmployeeAdmin(props) {
             title="Thêm nhân viên"
             visible={isCreate}
             width={1600}
-            okText="Lưu"
+            okText="Ok"
             onCancel={() => {
               resetCreate();
             }}
             onOk={() => {
-              console.log("user", createUser);
-              handleCreateClick(createUser);
+              // console.log("user", createUser);
+              // handleCreateClick(createUser);
+              resetCreate();
             }}
           >
             <Row>
-              <div className="col-6" style={{ padding: "1rem" }}>
-                <div class="form-group">
-                  <h3 class="title_sticky" id="jumpto_0">
-                    Tên nhân viên:
-                  </h3>
+              <Form style={{ width: "100%" }} onFinish={handleCreateClick}>
+                <Form.Item
+                  name="name"
+                  rules={[
+                    {
+                      whitespace: true,
+                      message: "Tên không được nhập khoảng trống",
+                    },
+                    {
+                      required: true,
+                      message: "Tên không được bỏ trống",
+                    },
+                  ]}
+                >
                   <Input
-                    style={{ height: "35px" }}
+                    placeholder=" Nhập vào tên "
                     value={createUser?.name}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -406,35 +524,23 @@ function EmployeeAdmin(props) {
                       });
                     }}
                   />
-                </div>
-                <div className="">
-                  <div class="form-group">
-                    <h3 class="title_sticky">Hình ảnh</h3>
-                    <ImgCrop rotate>
-                      <Upload
-                        {...propss}
-                        onRemove={(file) => {
-                          onRemoveImage(file);
-                          return { ...propss };
-                        }}
-                        listType="picture-card"
-                        fileList={fileList}
-                        onChange={onChange}
-                        onPreview={handlePreview}
-                        status="success"
-                      >
-                        {fileList.length < 1 && "+ Upload"}
-                      </Upload>
-                    </ImgCrop>
-                    {images.length > 0 && images.map()}
-                  </div>
-                </div>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    Email:
-                  </h5>
+                </Form.Item>
+
+                <Form.Item
+                  name="email"
+                  rules={[
+                    {
+                      type: "email",
+                      message: "Định dạng email không hợp lệ",
+                    },
+                    {
+                      required: true,
+                      message: "Email không được bỏ trống",
+                    },
+                  ]}
+                >
                   <Input
-                    style={{ height: "35px" }}
+                    placeholder="Nhập email"
                     value={createUser?.email}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -442,17 +548,35 @@ function EmployeeAdmin(props) {
                       });
                     }}
                   />
-                </div>
-              </div>
-              <div className="col-6" style={{ padding: "1rem" }}>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    Số điện thoại:
-                  </h5>
+                </Form.Item>
 
+                <Form.Item
+                  name="phone"
+                  rules={[
+                    {
+                      whitespace: true,
+                      message: "Số điện thoại không được nhập khoảng trống",
+                    },
+                    {
+                      required: true,
+                      message: "Số điện thoại không được bỏ trống",
+                    },
+                    {
+                      max: 9,
+                      message: "Số điện thoại chỉ có 10 số",
+                    },
+                    {
+                      min: 9,
+                      message: "Số điện thoại phải đủ 10 số",
+                    },
+                  ]}
+                >
                   <Input
+                    addonBefore={prefixSelector}
+                    placeholder="Nhập số điện thoại"
                     type="number"
-                    style={{ height: "35px" }}
+                    size="large"
+                    className="custom-ant-input-number"
                     value={createUser?.phone}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -460,13 +584,22 @@ function EmployeeAdmin(props) {
                       });
                     }}
                   />
-                </div>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    Địa chỉ:
-                  </h5>
+                </Form.Item>
+                <Form.Item
+                  name="address"
+                  rules={[
+                    {
+                      whitespace: true,
+                      message: "Địa chỉ không được nhập khoảng trống",
+                    },
+                    {
+                      required: true,
+                      message: "Địa chỉ không được bỏ trống",
+                    },
+                  ]}
+                >
                   <Input
-                    style={{ height: "35px" }}
+                    placeholder="Nhập địa chỉ"
                     value={createUser?.address}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -474,14 +607,19 @@ function EmployeeAdmin(props) {
                       });
                     }}
                   />
-                </div>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    password:
-                  </h5>
-                  <Input
-                    type="password"
-                    style={{ height: "35px" }}
+                </Form.Item>
+                <Form.Item
+                  name="password"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Password không được để trống",
+                    },
+                  ]}
+                  hasFeedback
+                >
+                  <Input.Password
+                    placeholder=" Nhập Mật Khẩu"
                     value={createUser?.password}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -489,8 +627,58 @@ function EmployeeAdmin(props) {
                       });
                     }}
                   />
+                </Form.Item>
+                <Form.Item
+                  name="confirm"
+                  dependencies={["password"]}
+                  hasFeedback
+                  rules={[
+                    {
+                      required: true,
+                      message: "Password không được bỏ trống",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("password") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("passwords không giống nhau")
+                        );
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password placeholder=" Nhập lại mật khẩu" />
+                </Form.Item>
+                <h3 class="title_sticky">Hình ảnh</h3>
+                <ImgCrop rotate>
+                  <Upload
+                    {...propss}
+                    onRemove={(file) => {
+                      onRemoveImage(file);
+                      return { ...propss };
+                    }}
+                    listType="picture-card"
+                    fileList={fileList}
+                    onChange={onChange}
+                    onPreview={handlePreview}
+                    status="success"
+                  >
+                    {fileList.length < 1 && "+ Upload"}
+                  </Upload>
+                </ImgCrop>
+                {images.length > 0 && images.map()}
+                <div className="btn-wrapper">
+                  <button
+                    className="theme-btn-1 btn reverse-color btn-block"
+                    type="submit"
+                    style={{ float: "right" }}
+                  >
+                    TẠO NHÂN VIÊN
+                  </button>
                 </div>
-              </div>
+              </Form>
             </Row>
           </Modal>
         </div>

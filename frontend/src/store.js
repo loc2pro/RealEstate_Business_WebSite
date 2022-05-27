@@ -22,6 +22,7 @@ import {
   postListReducer,
 } from "./reducers/postReducers";
 import {
+  ListAdminReducer,
   ListBrowseReducer,
   ListProductSellerReducer,
   ListProductSoldSellerReducer,
@@ -41,6 +42,9 @@ import {
   userUpdateProfileReducer,
   salarySellerReducer,
   sellerUpdateReducer,
+  sellerDetailsReducer,
+  paymentSalarySellerReducer,
+  forgotPasswordReducer,
 } from "./reducers/userReducers";
 
 const initialState = {
@@ -61,6 +65,7 @@ const initialState = {
 };
 const reducer = combineReducers({
   list: ListReducer,
+  listAdmin: ListAdminReducer,
   productCategoryList: productCategoryListReducer,
   productList: productListReducer,
   productDetails: productDetailsReducer,
@@ -73,6 +78,7 @@ const reducer = combineReducers({
   orderPay: orderPayReducer,
   orderMineList: orderMineReducer,
   userDetails: userDetailsReducer,
+  sellerDetails: sellerDetailsReducer,
   userUpdateProfile: userUpdateProfileReducer,
   postProducts: postProductsReducer,
   postGrounds: postGroundsReducer,
@@ -91,7 +97,9 @@ const reducer = combineReducers({
   listSeller: listSellerReducer,
   listUser: listUserReducer,
   salarySeller: salarySellerReducer,
+  paymentSalarySeller: paymentSalarySellerReducer,
   updateSeller: sellerUpdateReducer,
+  passForgot: forgotPasswordReducer,
 });
 const composeEnhancer = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 const store = createStore(

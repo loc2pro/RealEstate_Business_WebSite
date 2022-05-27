@@ -1,15 +1,24 @@
 import Axios from "axios";
 import api from "../api";
 import {
+  FORGOT_PASSWORD_FAIL,
+  FORGOT_PASSWORD_REQUEST,
+  FORGOT_PASSWORD_SUCCESS,
   SELLER_CREATE_FAIL,
   SELLER_CREATE_REQUEST,
   SELLER_CREATE_SUCCESS,
   SELLER_DELETE_FAIL,
   SELLER_DELETE_REQUEST,
   SELLER_DELETE_SUCCESS,
+  SELLER_DETAILS_FAIL,
+  SELLER_DETAILS_REQUEST,
+  SELLER_DETAILS_SUCCESS,
   SELLER_LIST_FAIL,
   SELLER_LIST_REQUEST,
   SELLER_LIST_SUCCESS,
+  SELLER_PAYMENT_SALARY_FAIL,
+  SELLER_PAYMENT_SALARY_REQUEST,
+  SELLER_PAYMENT_SALARY_SUCCESS,
   SELLER_UPDATE_FAIL,
   SELLER_UPDATE_REQUEST,
   SELLER_UPDATE_SUCCESS,
@@ -74,6 +83,7 @@ export const signin = (email, password) => async (dispatch) => {
     });
     dispatch({ type: USER_SIGNIN_SUCCESS, payload: data });
     localStorage.setItem("userInfo", JSON.stringify(data));
+    return {success:true,data};
   } catch (error) {
     dispatch({
       type: USER_SIGNIN_FAIL,
@@ -82,6 +92,7 @@ export const signin = (email, password) => async (dispatch) => {
           ? error.response.data.message
           : error.message,
     });
+    return {success:false,error};
   }
 };
 
@@ -90,6 +101,24 @@ export const signout = () => (dispatch) => {
   localStorage.removeItem("cartItems");
   localStorage.removeItem("shippingAddress");
   dispatch({ type: USER_SIGNOUT });
+};
+
+//forgot
+
+export const forgotPassword = (email) => async (dispatch) => {
+  dispatch({ type: FORGOT_PASSWORD_REQUEST, payload: { email } });
+  try {
+    const { data } = await Axios.post(`${api}/api/users/forgot`, { email });
+    dispatch({ type: FORGOT_PASSWORD_SUCCESS, payload: data });
+  } catch (error) {
+    dispatch({
+      type: FORGOT_PASSWORD_FAIL,
+      payload:
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message,
+    });
+  }
 };
 
 export const detailsUser = (userId) => async (dispatch, getState) => {
@@ -161,17 +190,16 @@ export const createUserAdmin = (newUser) => async (dispatch) => {
     if (data.success) {
       dispatch({ type: USER_CREATE_SUCCESS, payload: data });
     } else {
-      dispatch({ type: USER_CREATE_FAIL, message: "Tạo người dùng thất bại" });
+      dispatch({ type: USER_CREATE_FAIL });
+      return { success: false, message: data.message };
     }
     return data;
   } catch (error) {
     dispatch({
       type: USER_CREATE_FAIL,
-      payload:
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message,
     });
+    const { response } = error;
+    return { success: false, message: response.data.message };
   }
 };
 //Xóa user
@@ -196,18 +224,34 @@ export const updateUser = (user) => async (dispatch) => {
     if (data.success) {
       dispatch({ type: USER_UPDATE_SUCCESS, payload: data });
     } else {
-      dispatch({ type: USER_UPDATE_FAIL, message: "Update Thất bại" });
+      dispatch({ type: USER_UPDATE_FAIL, message: data.message });
     }
     return data;
+  } catch (error) {
+    dispatch({ type: USER_UPDATE_FAIL });
+    const { response } = error;
+    return { success: false, message: response.data.message };
+  }
+};
+// Detail seller
+export const detailSeller = (userId) => async (dispatch, getState) => {
+  dispatch({ type: SELLER_DETAILS_REQUEST, payload: userId });
+  const {
+    userSignin: { userInfo },
+  } = getState();
+  try {
+    const { data } = await Axios.get(`${api}/api/users/seller/${userId}`, {
+      headers: { Authorization: `Bearer ${userInfo?.token}` },
+    });
+    dispatch({ type: SELLER_DETAILS_SUCCESS, payload: data });
   } catch (error) {
     const message =
       error.response && error.response.data.message
         ? error.response.data.message
         : error.message;
-    dispatch({ type: USER_UPDATE_FAIL, payload: message });
+    dispatch({ type: SELLER_DETAILS_FAIL, payload: message });
   }
 };
-
 //list seller
 export const listSellers = () => async (dispatch, getState) => {
   dispatch({ type: SELLER_LIST_REQUEST });
@@ -235,18 +279,16 @@ export const createSellerAdmin = (newUser, img) => async (dispatch) => {
     } else {
       dispatch({
         type: SELLER_CREATE_FAIL,
-        message: "Tạo người dùng thất bại",
+        message: data.message,
       });
     }
     return data;
   } catch (error) {
     dispatch({
       type: SELLER_CREATE_FAIL,
-      payload:
-        error.response && error.response.data.message
-          ? error.response.data.message
-          : error.message,
     });
+    const { response } = error;
+    return { success: false, message: response.data.message };
   }
 };
 //Xóa seller
@@ -274,14 +316,36 @@ export const updateSellerAdmin = (user) => async (dispatch) => {
     if (data.success) {
       dispatch({ type: SELLER_UPDATE_SUCCESS, payload: data });
     } else {
-      dispatch({ type: SELLER_UPDATE_FAIL, message: "Update Thất bại" });
+      dispatch({ type: SELLER_UPDATE_FAIL, message: data.message });
     }
     return data;
   } catch (error) {
-    const message =
-      error.response && error.response.data.message
-        ? error.response.data.message
-        : error.message;
-    dispatch({ type: SELLER_UPDATE_FAIL, payload: message });
+    dispatch({ type: SELLER_UPDATE_FAIL });
+    const { response } = error;
+    return { success: false, message: response.data.message };
   }
 };
+
+// Thanh toán lương cho nhân viên
+export const paymentSalarySellerAdmin =
+  (userId) => async (dispatch, getState) => {
+    dispatch({ type: SELLER_PAYMENT_SALARY_REQUEST, payload: userId });
+    try {
+      const { data } = await Axios.put(
+        `${api}/api/users/admin/payment/${userId}`
+      );
+      if (data.success) {
+        dispatch({ type: SELLER_PAYMENT_SALARY_SUCCESS, payload: data });
+      } else {
+        dispatch({
+          type: SELLER_PAYMENT_SALARY_FAIL,
+          message: data.message,
+        });
+      }
+      return data;
+    } catch (error) {
+      const { response } = error;
+      return { success: false, message: response.data.message };
+      dispatch({ type: SELLER_PAYMENT_SALARY_FAIL });
+    }
+  };

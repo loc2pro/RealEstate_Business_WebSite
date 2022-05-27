@@ -67,7 +67,13 @@ export const deletePost = (postHistoryId) => async (dispatch, getState) => {
     const { data } = await Axios.delete(
       `${api}/api/products/postHistory/${postHistoryId}`
     );
-    dispatch({ type: POST_HISTORY_DELETE_SUCCESS, payload: data });
+    if (data.success) {
+      dispatch({ type: POST_HISTORY_DELETE_SUCCESS, payload: data });
+    } else {
+      dispatch({ type: POST_HISTORY_DELETE_FAIL, payload: message });
+      return { success: false, message: message };
+    }
+    return data;
   } catch (error) {
     const message =
       error.response && error.response.data.message

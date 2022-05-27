@@ -64,7 +64,6 @@ function Header(props) {
   return (
     <div className="header">
       <div className="row">
-      
         <a href="/" class="logo">
           <span>Bất Động Sản</span>Phát Lộc
         </a>

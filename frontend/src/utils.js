@@ -5,22 +5,22 @@ export const prices = [
     max: 0,
   },
   {
-    name: `1 -> 10 Triệu`,
+    name: `1 Triệu - 10 Triệu`,
     min: 1,
     max: 10000000,
   },
   {
-    name: `10 Triệu -> 100 Triệu`,
+    name: `10 Triệu - 100 Triệu`,
     min: 10000000,
     max: 100000000,
   },
   {
-    name: `100 triệu -> 1 Tỷ`,
+    name: `100 Triệu - 1 Tỷ`,
     min: 100000000,
     max: 1000000000,
   },
   {
-    name: `1 Tỷ -> 10 Tỷ`,
+    name: `1 Tỷ - 10 Tỷ`,
     min: 1000000000,
     max: 10000000000,
   },

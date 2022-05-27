@@ -1,15 +1,24 @@
-import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import {
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+import {
+  Form,
   Input,
+  message,
   Modal,
   notification,
   Popconfirm,
   Row,
+  Select,
   Space,
   Table,
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   createUserAdmin,
   deleteUser,
@@ -17,6 +26,8 @@ import {
 } from "../actions/userActions";
 import LoadingBox from "./LoadingBox";
 import MessageBox from "./MessageBox";
+const { Option } = Select;
+
 const { TextArea } = Input;
 function UserAdmin(props) {
   useEffect(() => {
@@ -31,18 +42,18 @@ function UserAdmin(props) {
   const [editingUser, setEditingUser] = useState(null);
   const [createUser, setCreateUser] = useState(null);
   const [dataSource, setDataSource] = useState();
+  const [keySearch, setkeySearch] = useState("");
+
   useEffect(() => {
     setDataSource(users);
   }, [users]);
 
   const handleDeleteClick = (id) => {
-    console.log(id);
     dispatch(deleteUser(id));
     setDataSource(dataSource.filter((item) => item._id !== id));
   };
 
   const onEditUser = (record) => {
-    console.log("record", record);
     setIsEditing(true);
     setEditingUser({ ...record });
   };
@@ -60,7 +71,6 @@ function UserAdmin(props) {
   };
 
   const handleCreateClick = (e) => {
-    console.log(e, "usertest");
     const create = dispatch(createUserAdmin(e));
     create
       .then((data) => {
@@ -83,6 +93,7 @@ function UserAdmin(props) {
         }
       })
       .catch((err) => {
+        console.log(err, "err");
         notification.error({
           description: err.message,
           placement: "bottomRight",
@@ -127,25 +138,44 @@ function UserAdmin(props) {
       });
   };
 
+  const prefixSelector = (
+    <Form.Item name="prefix" noStyle>
+      <Select
+        defaultValue="+84"
+        style={{
+          width: 100,
+        }}
+      >
+        <Option value="84">+84</Option>
+      </Select>
+    </Form.Item>
+  );
   const columns = [
     {
       title: "Tên người dùng",
       dataIndex: "name",
+      with: 200,
+      fixed: "left",
     },
     {
       title: "email",
       dataIndex: "email",
+      with: 200,
     },
     {
       title: "Số điện thoại",
       dataIndex: "phone",
+      with: 200,
     },
     {
       title: "Địa chỉ",
       dataIndex: "address",
+      with: 400,
     },
     {
       title: "Action",
+      with: 50,
+      fixed: "right",
       key: "action",
       render: (record) => (
         <Space size="middle">
@@ -176,18 +206,40 @@ function UserAdmin(props) {
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
         <div>
-          <button
-            onClick={onCreateUser}
-            style={{ float: "right", margin: "0 0 5px" }}
-          >
-            Thêm người dùng
-          </button>
-          <Table columns={columns} dataSource={dataSource} />
+          <div className="btn-wrapper animated ">
+            <button
+              onClick={onCreateUser}
+              style={{ float: "right", margin: "0 0 5px" }}
+              className="theme-btn-1 btn btn-effect-1 go-top"
+            >
+              Thêm người dùng
+            </button>
+          </div>
+          <Input
+            onChange={(e) => {
+              const value = e.target.value;
+              setkeySearch(value);
+            }}
+            className="custom-antd-input"
+            placeholder="Tìm kím theo tên người dùng"
+            prefix={<SearchOutlined />}
+            size="small"
+          ></Input>
+          <Table
+            columns={columns}
+            dataSource={dataSource?.filter(
+              (data) =>
+                !keySearch ||
+                data.name.toLowerCase().includes(keySearch.toLowerCase())
+            )}
+            scroll={{ x: 2000, y: 800 }}
+            pagination={{ pageSize: 20 }}
+          />
           <Modal
             title="Chỉnh sửa người dùng"
             visible={isEditing}
             width={1600}
-            okText="Lưu"
+            okText="ok"
             onCancel={() => {
               resetEditing();
             }}
@@ -203,7 +255,7 @@ function UserAdmin(props) {
                     Tên người dùng:
                   </h3>
                   <Input
-                    style={{ height: "35px" }}
+                    size="large"
                     value={editingUser?.name}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -217,7 +269,7 @@ function UserAdmin(props) {
                     Email:
                   </h5>
                   <Input
-                    style={{ height: "35px" }}
+                    size="large"
                     value={editingUser?.email}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -235,7 +287,8 @@ function UserAdmin(props) {
 
                   <Input
                     type="number"
-                    style={{ height: "35px" }}
+                    size="large"
+                    className="custom-ant-input"
                     value={editingUser?.phone}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -249,7 +302,7 @@ function UserAdmin(props) {
                     Địa chỉ:
                   </h5>
                   <Input
-                    style={{ height: "35px" }}
+                    size="large"
                     value={editingUser?.address}
                     onChange={(e) => {
                       setEditingUser((pre) => {
@@ -265,23 +318,31 @@ function UserAdmin(props) {
             title="Thêm người dùng"
             visible={isCreate}
             width={1600}
-            okText="Lưu"
+            okText="ok"
             onCancel={() => {
               resetCreate();
             }}
             onOk={() => {
-              console.log("user", createUser);
-              handleCreateClick(createUser);
+              resetCreate();
             }}
           >
             <Row>
-              <div className="col-6" style={{ padding: "1rem" }}>
-                <div class="form-group">
-                  <h3 class="title_sticky" id="jumpto_0">
-                    Tên người dùng:
-                  </h3>
+              <Form style={{ width: "100%" }} onFinish={handleCreateClick}>
+                <Form.Item
+                  name="name"
+                  rules={[
+                    {
+                      whitespace: true,
+                      message: "Tên không được nhập khoảng trống",
+                    },
+                    {
+                      required: true,
+                      message: "Tên không được bỏ trống",
+                    },
+                  ]}
+                >
                   <Input
-                    style={{ height: "35px" }}
+                    placeholder=" Nhập vào tên "
                     value={createUser?.name}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -289,13 +350,23 @@ function UserAdmin(props) {
                       });
                     }}
                   />
-                </div>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    Email:
-                  </h5>
+                </Form.Item>
+
+                <Form.Item
+                  name="email"
+                  rules={[
+                    {
+                      type: "email",
+                      message: "Định dạng email không hợp lệ",
+                    },
+                    {
+                      required: true,
+                      message: "Email không được bỏ trống",
+                    },
+                  ]}
+                >
                   <Input
-                    style={{ height: "35px" }}
+                    placeholder="Nhập email"
                     value={createUser?.email}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -303,17 +374,35 @@ function UserAdmin(props) {
                       });
                     }}
                   />
-                </div>
-              </div>
-              <div className="col-6" style={{ padding: "1rem" }}>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    Số điện thoại:
-                  </h5>
+                </Form.Item>
 
+                <Form.Item
+                  name="phone"
+                  rules={[
+                    {
+                      whitespace: true,
+                      message: "Số điện thoại không được nhập khoảng trống",
+                    },
+                    {
+                      required: true,
+                      message: "Số điện thoại không được bỏ trống",
+                    },
+                    {
+                      max: 9,
+                      message: "Số điện thoại vượt quá giới hạn",
+                    },
+                    {
+                      min: 9,
+                      message: "Số điện thoại phải đủ 10 số",
+                    },
+                  ]}
+                >
                   <Input
+                    addonBefore={prefixSelector}
+                    placeholder="Nhập số điện thoại"
                     type="number"
-                    style={{ height: "35px" }}
+                    size="large"
+                    className="custom-ant-input-number"
                     value={createUser?.phone}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -321,13 +410,22 @@ function UserAdmin(props) {
                       });
                     }}
                   />
-                </div>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    Địa chỉ:
-                  </h5>
+                </Form.Item>
+                <Form.Item
+                  name="address"
+                  rules={[
+                    {
+                      whitespace: true,
+                      message: "Địa chỉ không được nhập khoảng trống",
+                    },
+                    {
+                      required: true,
+                      message: "Địa chỉ không được bỏ trống",
+                    },
+                  ]}
+                >
                   <Input
-                    style={{ height: "35px" }}
+                    placeholder="Nhập địa chỉ"
                     value={createUser?.address}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -335,14 +433,19 @@ function UserAdmin(props) {
                       });
                     }}
                   />
-                </div>
-                <div class="form-group">
-                  <h5 class="title_sticky" id="jumpto_0">
-                    password:
-                  </h5>
-                  <Input
-                    type="password"
-                    style={{ height: "35px" }}
+                </Form.Item>
+                <Form.Item
+                  name="password"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Password không được để trống",
+                    },
+                  ]}
+                  hasFeedback
+                >
+                  <Input.Password
+                    placeholder=" Nhập Mật Khẩu"
                     value={createUser?.password}
                     onChange={(e) => {
                       setCreateUser((pre) => {
@@ -350,8 +453,40 @@ function UserAdmin(props) {
                       });
                     }}
                   />
+                </Form.Item>
+                <Form.Item
+                  name="confirm"
+                  dependencies={["password"]}
+                  hasFeedback
+                  rules={[
+                    {
+                      required: true,
+                      message: "Password không được bỏ trống",
+                    },
+                    ({ getFieldValue }) => ({
+                      validator(_, value) {
+                        if (!value || getFieldValue("password") === value) {
+                          return Promise.resolve();
+                        }
+                        return Promise.reject(
+                          new Error("passwords không giống nhau")
+                        );
+                      },
+                    }),
+                  ]}
+                >
+                  <Input.Password placeholder=" Nhập lại mật khẩu" />
+                </Form.Item>
+                <div className="btn-wrapper">
+                  <button
+                    className="theme-btn-1 btn reverse-color btn-block"
+                    type="submit"
+                    style={{ float: "right" }}
+                  >
+                    TẠO NGƯỜI DÙNG
+                  </button>
                 </div>
-              </div>
+              </Form>
             </Row>
           </Modal>
         </div>

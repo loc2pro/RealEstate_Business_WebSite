@@ -19,14 +19,17 @@ productRouter.get(
   "/product",
   expressAsyncHandler(async (req, res) => {
     console.log(req.query);
-    const pageSize = 99999999999999999;
+    const pageSize = 4;
     const page = Number(req.query.pageNumber) || 1;
     const name = req.query.name || "";
     const city = req.query.city || "";
     const district = req.query.district || "";
     const ward = req.query.ward || "";
     const type = req.query.type || "";
+    const status = req.query.status || "";
     const order = req.query.order || "";
+    const direction = req.query.direction || "";
+
     const min =
       req.query.min && Number(req.query.min) !== 0 ? Number(req.query.min) : 0;
     const max =
@@ -34,6 +37,8 @@ productRouter.get(
 
     const nameFilter = name ? { name: { $regex: name, $options: "i" } } : {};
     const typeFilter = type ? { type } : {};
+    const statusFilter = status ? { status } : {};
+    const directionFilter = direction ? { direction } : {};
     const cityFilter = city ? { city } : {};
     const districtFilter = district ? { district } : {};
     const wardFilter = ward ? { ward } : {};
@@ -53,6 +58,10 @@ productRouter.get(
       ...wardFilter,
       ...typeFilter,
       ...priceFilter,
+      ...statusFilter,
+      ...directionFilter,
+      browse: true,
+      countInStock: 1,
     });
     const products = await Product.find({
       ...nameFilter,
@@ -61,11 +70,16 @@ productRouter.get(
       ...wardFilter,
       ...typeFilter,
       ...priceFilter,
+      ...statusFilter,
+      ...directionFilter,
+      browse: true,
+      countInStock: 1,
     })
       .sort(sortOrder)
+      .populate("seller", "name email phone seller")
       .skip(pageSize * (page - 1))
       .limit(pageSize);
-    res.send({ products, page, pages: Math.ceil(count / pageSize) });
+    res.send({ products, page, pages: Math.ceil(count / pageSize), count });
   })
 );
 
@@ -79,7 +93,20 @@ productRouter.get(
 productRouter.get(
   "/",
   expressAsyncHandler(async (req, res) => {
-    const products = await Product.find({});
+    const products = await Product.find({
+      browse: true,
+      countInStock: 1,
+    }).populate("seller", "name email phone seller");
+    res.send(products);
+  })
+);
+productRouter.get(
+  "/productAdmin",
+  expressAsyncHandler(async (req, res) => {
+    const products = await Product.find({}).populate(
+      "seller",
+      "name email phone seller"
+    );
     res.send(products);
   })
 );
@@ -103,7 +130,7 @@ productRouter.get(
   "/:id",
   expressAsyncHandler(async (req, res) => {
     await Product.findById(req.params.id)
-      .populate("seller", "name email phone")
+      .populate("seller", "name email phone seller")
       .populate("user", "name email phone")
       .then(async (product) => {
         res.status(200).json({
@@ -141,7 +168,112 @@ productRouter.post(
       image,
       utilities,
       legalDocuments,
+      floor,
+      direction,
     } = req.body;
+    console.log(req.body);
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: `Tên sản phẩm không được rỗng.`,
+      });
+    }
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: `Bạn cần đăng nhập trước khi gữi bài .`,
+      });
+    }
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: `Trạng thái sản phẩm không được rỗng.`,
+      });
+    }
+    if (!type) {
+      return res.status(400).json({
+        success: false,
+        message: `Loại sản phẩm không được rỗng.`,
+      });
+    }
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        message: `Địa chỉ sản phẩm không được rỗng.`,
+      });
+    }
+    if (!city) {
+      return res.status(400).json({
+        success: false,
+        message: `Tỉnh/thành phố sản phẩm không được rỗng.`,
+      });
+    }
+    if (!district) {
+      return res.status(400).json({
+        success: false,
+        message: `Xã/ phường sản phẩm không được rỗng.`,
+      });
+    }
+    if (!ward) {
+      return res.status(400).json({
+        success: false,
+        message: `Quận/huyện sản phẩm không được rỗng.`,
+      });
+    }
+    if (!price) {
+      return res.status(400).json({
+        success: false,
+        message: `Giá sản phẩm không được rỗng.`,
+      });
+    }
+    if (!acreage) {
+      return res.status(400).json({
+        success: false,
+        message: `Diện tích sản phẩm không được rỗng.`,
+      });
+    }
+    if (!description) {
+      return res.status(400).json({
+        success: false,
+        message: `Mô tả sản phẩm không được rỗng.`,
+      });
+    }
+    if (!bedroom) {
+      return res.status(400).json({
+        success: false,
+        message: `Phòng ngủ sản phẩm không được rỗng.`,
+      });
+    }
+    if (!toilet) {
+      return res.status(400).json({
+        success: false,
+        message: `Nhà vệ sinh sản phẩm không được rỗng.`,
+      });
+    }
+    if (!legalDocuments) {
+      return res.status(400).json({
+        success: false,
+        message: `Bạn chưa chọn giấy tờ pháp lý.`,
+      });
+    }
+    if (!floor) {
+      return res.status(400).json({
+        success: false,
+        message: `Số tầng sản phẩm không được rỗng.`,
+      });
+    }
+    if (!direction) {
+      return res.status(400).json({
+        success: false,
+        message: `Bạn chưa chọn hướng sản phẩm.`,
+      });
+    }
+    if (!image) {
+      return res.status(400).json({
+        success: false,
+        message: `Vui lòng thêm hình ảnh.`,
+      });
+    }
     await Product.insertMany({
       name: name,
       user: user,
@@ -162,18 +294,20 @@ productRouter.post(
       lng: lng,
       utilities: utilities,
       legalDocuments: legalDocuments,
+      floor: floor,
+      direction: direction,
     })
       .then(async (result) => {
         return res.status(200).json({
           success: true,
-          message: `Đăng tin ${name} thành công và chờ duyệt `,
+          message: `Gữi tin ${name} thành công và chờ duyệt `,
           result,
         });
       })
       .catch((err) => {
         return res.json({
           success: false,
-          message: `Đăng tin sản phẩm ${name} thất bại`,
+          message: `Gữi tin sản phẩm ${name} thất bại`,
           err,
         });
       });
@@ -209,11 +343,14 @@ productRouter.delete(
       if (product) {
         const deletedProduct = await product.remove();
         res.send({
+          success: true,
           message: `Xóa thành công sản phẩm ${deletedProduct.name}`,
           product: deletedProduct,
         });
       } else {
-        res.status(404).send({ message: "Không tìm thấy sản phẩm" });
+        res
+          .status(404)
+          .send({ success: false, message: "Không tìm thấy sản phẩm" });
       }
     } catch (error) {
       console.log(error);
@@ -434,7 +571,7 @@ productRouter.put(
     return res.send({
       listProduct,
       success: true,
-      message: `Đã phân công sản phẩm`,
+      message: `Đã phân công và đăng sản phẩm`,
     });
   })
 );

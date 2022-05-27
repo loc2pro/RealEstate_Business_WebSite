@@ -2,10 +2,7 @@ import { Button, Modal, notification, Row, Table, Tabs } from "antd";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { assignmentGround, listBrowseGrounds } from "../actions/groundActions";
-import {
-  assignment,
-  listBrowseProducts
-} from "../actions/productActions";
+import { assignment, listBrowseProducts } from "../actions/productActions";
 import { listSellers } from "../actions/userActions";
 import Browse from "../components/Browse";
 import BrowseGround from "../components/BrowseGround";
@@ -33,11 +30,12 @@ function BrowseScreen() {
   const [productId, setProductId] = useState([]);
   const [groundId, setGroundId] = useState([]);
   const [dataSource, setDataSource] = useState();
+  const [deletee, setDeletee] = useState();
 
   //List sản phẩm nhà/ chung cư
   useEffect(() => {
     dispatch(listBrowseProducts());
-  }, [dispatch, dataSource]);
+  }, [dispatch, dataSource, deletee]);
   //List sản phẩm đất
   useEffect(() => {
     dispatch(listBrowseGrounds());
@@ -54,7 +52,10 @@ function BrowseScreen() {
   const callbackGround = (chilData) => {
     setGroundId(chilData);
   };
-
+  //xóa
+  const callbackDelete = (chilData) => {
+    setDeletee(chilData);
+  };
   const onEditProduct = () => {
     setIsEditing(true);
   };
@@ -197,6 +198,7 @@ function BrowseScreen() {
             error={error}
             userInfo={userInfo}
             parentCallback={callbackProduct}
+            parentDeletee={callbackDelete}
           />
           {productId.length < 1 ? (
             <Button
@@ -282,7 +284,7 @@ function BrowseScreen() {
         title="Danh sách nhân viên "
         visible={isEditing}
         width={1600}
-        okText="Phân công"
+        okText="Đăng bài "
         onCancel={() => {
           resetEditing();
         }}

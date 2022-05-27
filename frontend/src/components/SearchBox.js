@@ -12,30 +12,37 @@ export default function SearchBox(props) {
     console.log(e);
     props.history.push(`/search/name/${name}`);
   };
-  const suffix = (
-    <AudioOutlined
-      style={{
-        fontSize: 20,
-        color: "#1890ff",
-      }}
-    />
-  );
+
   return (
-    <div
-      className="row"
-      style={{ justifyContent: "center", marginBottom: "1rem" }}
-    >
-      <Space direction="vertical">
-        <Search
-          placeholder="Tìm kiếm"
-          enterButton="Search"
-          size="large"
-          suffix={suffix}
-          onSearch={submitHandler}
+    // <div
+    //   className="row"
+    //   style={{ justifyContent: "center", marginBottom: "1rem" }}
+    // >
+    //   <Space direction="vertical">
+    //     <Search
+    //       placeholder="Tìm kiếm"
+    //       enterButton="Search"
+    //       size="large"
+    //       suffix={suffix}
+    //       onSearch={submitHandler}
+    //       onChange={(e) => setName(e.target.value)}
+    //       style={{ width: 450 }}
+    //     />
+    //   </Space>
+    // </div>
+    <div className="ltn__search-widget mb-30">
+      <form action="#" onSubmit={submitHandler}>
+        <input
+          type="text"
+          name="search"
+          placeholder="Tìm kiếm theo tên"
+          value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ width: 450 }}
         />
-      </Space>
+        <button type="submit">
+          <i className="fas fa-search" />
+        </button>
+      </form>
     </div>
   );
 }

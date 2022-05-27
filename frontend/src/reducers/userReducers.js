@@ -35,6 +35,15 @@ import {
   SELLER_UPDATE_REQUEST,
   SELLER_UPDATE_FAIL,
   SELLER_UPDATE_SUCCESS,
+  SELLER_DETAILS_REQUEST,
+  SELLER_DETAILS_SUCCESS,
+  SELLER_DETAILS_FAIL,
+  SELLER_PAYMENT_SALARY_REQUEST,
+  SELLER_PAYMENT_SALARY_SUCCESS,
+  SELLER_PAYMENT_SALARY_FAIL,
+  FORGOT_PASSWORD_REQUEST,
+  FORGOT_PASSWORD_SUCCESS,
+  FORGOT_PASSWORD_FAIL,
 } from "../constants/userConstants";
 
 export const userRegisterReducer = (state = {}, action) => {
@@ -148,6 +157,19 @@ export const userDeleteReducer = (state = {}, action) => {
       return state;
   }
 };
+// Seller Detail
+export const sellerDetailsReducer = (state = { loading: true }, action) => {
+  switch (action.type) {
+    case SELLER_DETAILS_REQUEST:
+      return { loading: true };
+    case SELLER_DETAILS_SUCCESS:
+      return { loading: false, user: action.payload };
+    case SELLER_DETAILS_FAIL:
+      return { loading: false, error: action.payload };
+    default:
+      return state;
+  }
+};
 //List seller
 export const listSellerReducer = (
   state = { sellers: [], loading: true },
@@ -189,6 +211,40 @@ export const salarySellerReducer = (
       return { payload: false, seller: action.payload };
     case SELLER_SALARY_FAIL:
       return { payload: false, error: action.payload };
+    default:
+      return state;
+  }
+};
+
+//Salary seller payment
+export const paymentSalarySellerReducer = (
+  state = { seller: {}, loading: true },
+  action
+) => {
+  switch (action.type) {
+    case SELLER_PAYMENT_SALARY_REQUEST:
+      return { payload: true };
+    case SELLER_PAYMENT_SALARY_SUCCESS:
+      return { payload: false, seller: action.payload };
+    case SELLER_PAYMENT_SALARY_FAIL:
+      return { payload: false, error: action.payload };
+    default:
+      return state;
+  }
+};
+
+//Forgot
+export const forgotPasswordReducer = (
+  state = { forgot: {}, loading: true },
+  action
+) => {
+  switch (action.type) {
+    case FORGOT_PASSWORD_REQUEST:
+      return { loading: true };
+    case FORGOT_PASSWORD_SUCCESS:
+      return { loading: false, forgot: action.payload, success: true };
+    case FORGOT_PASSWORD_FAIL:
+      return { loading: false, error: action.payload, success: false };
     default:
       return state;
   }

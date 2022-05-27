@@ -1,0 +1,69 @@
+body{
+    &::-webkit-scrollbar{
+        width: 8px ;
+        background-color: white;
+        border-radius: 8px;
+    }
+
+    &::-webkit-scrollbar-button{
+        background-color: white;
+    }
+
+    &::-webkit-scrollbar-thumb{
+        border-radius: 10px;
+        background-color: #cde1ff;
+    }
+}
+
+.ant-layout-sider-primary
+{
+    &::-webkit-scrollbar{
+        width: 8px ;
+        background-color: white;
+        border-radius: 8px;
+    }
+
+    &::-webkit-scrollbar-button{
+        background-color: white;
+    }
+
+    &::-webkit-scrollbar-thumb{
+        border-radius: 10px;
+        background-color: #cde1ff;
+    }
+}
+
+.ant-table-body{
+    &::-webkit-scrollbar{
+        width: 8px ;
+        background-color: white;
+        border-radius: 8px;
+    }
+
+    &::-webkit-scrollbar-button{
+        background-color: white;
+    }
+
+    &::-webkit-scrollbar-thumb{
+        border-radius: 10px;
+        background-color: #cde1ff;
+    }
+}
+
+
+.custom-ant-input-number{
+    border-radius: 20px !important;
+    .ant-input-group{
+
+    }
+    .ant-input-group-addon{
+        height: 65px !important;
+    }
+    .ant-input-lg{
+        height: 65px !important;
+    }
+}
+
+.custom-ant-input{
+    height: 65px !important;
+}

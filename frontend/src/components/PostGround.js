@@ -1,5 +1,6 @@
 import { UserOutlined } from "@ant-design/icons";
 import {
+  Button,
   Form,
   Input,
   message,
@@ -9,6 +10,7 @@ import {
   Select,
   Upload,
 } from "antd";
+import ImgCrop from "antd-img-crop";
 import "antd/dist/antd.css";
 import AWS from "aws-sdk";
 import axios from "axios";
@@ -47,6 +49,11 @@ export default function PostGround() {
   const [previewVisible, SetPreviewVisible] = useState(false);
   const [previewImage, SetPreviewImage] = useState("");
   const [fileList, setFileList] = useState([]);
+  //Type
+  const [type, setType] = useState("");
+  const [status, setStatus] = useState("");
+  const [direction, setDirection] = useState("");
+  const [legalDocuments, setLegalDocuments] = useState("");
   function GetCitys() {
     axios
       .get("https://provinces.open-api.vn/api/")
@@ -125,88 +132,76 @@ export default function PostGround() {
     SetPreviewImage(file.url || file.preview);
     SetPreviewVisible(true);
   };
-  const props = {
-    customRequest({ file, onError, onProgress, onSuccess }) {
+  function OnModalOk(file) {
+    if (file) {
+      const randomName =
+        (Math.random() + 1).toString(36).substring(7) + file.name;
+      console.log(randomName);
       AWS.config.update({
         accessKeyId: "AKIAWPLFF2RHPNOWRBHJ",
         secretAccessKey: "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",
       });
-
       const S3 = new AWS.S3();
       console.log("DEBUG filename", file.name);
       console.log("DEBUG file type", file.type);
 
       const objParams = {
         Bucket: "nguyenhuuloc-sinhvien-iuh",
-        Key: "locdev2000@gmail.com" + "/" + file.name,
+        Key: "locdev2000@gmail.com" + "/" + randomName,
         Body: file,
         ContentType: file.type,
       };
 
       S3.putObject(objParams)
-        .on("httpUploadProgress", function ({ loaded, total }) {
-          onProgress(
-            {
-              percent: Math.round((loaded / total) * 100),
-            },
-            file
-          );
-        })
+        .on("httpUploadProgress", function ({ loaded, total }) {})
         .send(function (err, data) {
           if (err) {
-            onError();
             console.log("Something went wrong");
             console.log(err.code);
             console.log(err.message);
           } else {
-            onSuccess(data.response, file);
+            const image = {
+              uid: file.uid,
+              name: randomName,
+              fileName: randomName,
+              lastModified: file.lastModified,
+              lastModifiedDate: file.lastModified,
+              status: "done",
+              thumbUrl:
+                "https://nguyenhuuloc-sinhvien-iuh.s3.amazonaws.com/locdev2000%40gmail.com/" +
+                randomName,
+              url:
+                "https://nguyenhuuloc-sinhvien-iuh.s3.amazonaws.com/locdev2000%40gmail.com/" +
+                randomName,
+            };
+            const _fileList = [...fileList];
+            _fileList.push(image);
+            setFileList(_fileList);
           }
         });
-    },
-  };
-  const onRemoveImage = (file) => {
-    AWS.config.update({
-      accessKeyId: "AKIAWPLFF2RHPNOWRBHJ",
-      secretAccessKey: "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",
-    });
-
-    const S3 = new AWS.S3();
-    console.log("DEBUG filename", file.name);
-    console.log("DEBUG file type", file.type);
-
-    const objParams = {
-      Bucket: "nguyenhuuloc-sinhvien-iuh",
-      Key: "locdev2000@gmail.com" + "/" + file.name,
-    };
-
-    S3.deleteObject(objParams, function (err, data) {
-      if (err) console.log(err, err.stack);
-      // error
-      else console.log("success"); // deleted
-    });
-  };
+    }
+  }
 
   const [productForm, setProductForm] = useState({
     name: "",
     user: userInfo?._id,
-    status: "",
-    type: "",
     description: "",
     price: "",
     acreage: "",
-    legalDocuments: "",
     countInStock: 1,
   });
-  const handleCreate = (e) => {
-    e.preventDefault();
+  const onFinish = (e) => {
     let listImages = [];
     for (let item of fileList) {
-      listImages.push(item.originFileObj.name);
+      listImages.push(item.name);
     }
 
     const create = dispatch(
       postGround(
         productForm,
+        type,
+        status,
+        legalDocuments,
         address,
         district,
         ward,
@@ -226,6 +221,7 @@ export default function PostGround() {
           });
           resetForm();
         } else {
+          console.log("data", data);
           notification.warning({
             description: data.message,
             placement: "bottomRight",
@@ -234,6 +230,7 @@ export default function PostGround() {
         }
       })
       .catch((err) => {
+        console.log("dataerr", err);
         notification.error({
           description: err.message,
           placement: "bottomRight",
@@ -247,8 +244,6 @@ export default function PostGround() {
       name: "",
       user: userInfo?._id,
       image: null,
-      status: "",
-      type: "0",
       description: "",
       price: "",
       acreage: "",
@@ -284,333 +279,511 @@ export default function PostGround() {
         .then(function () {});
     }
   }, [productForm.address]);
-
+  function handleChangeType(value) {
+    setType(value);
+  }
+  function handleChangeStatus(value) {
+    setStatus(value);
+  }
+  function handleChangeLegalDocuments(value) {
+    setLegalDocuments(value);
+  }
+  function handleChangeDiretion(value) {
+    setDirection(value);
+  }
+  const suffixSelector = (
+    <Form.Item name="suffix" noStyle>
+      <Select
+        style={{
+          width: 100,
+        }}
+      >
+        <Option value="VNĐ">VNĐ</Option>
+      </Select>
+    </Form.Item>
+  );
   return (
-    <>
-      <Row>
-        <Form enctype="multipart/form-data" style={{ width: "100%" }}>
-          <h1 style={{ textAlign: "center", fontSize: "30px", color: "red" }}>
-            <a>Đất Nền/ Đất Thổ Cư</a>
-          </h1>
+    <div className="ltn__appointment-area pb-120">
+      <div className="container">
+        <div className="row">
+          <div className="col-lg-12">
+            <div className="ltn__appointment-inner">
+              <Form onFinish={onFinish}>
+                <h2>1. Thông tin</h2>
+                <p>
+                  <small>
+                    Các trường này là bắt buộc: Tiêu đề, phương tiện thuộc tính
+                  </small>
+                </p>
+                <div className="row">
+                  <div className="col-md-12">
+                    <h6>Tên Sản Phẩm</h6>
+                    <div className="input-item input-item-name ltn__custom-icon">
+                      <Form.Item
+                        name="name"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Tên sản phẩm không được bỏ trống",
+                          },
+                          {
+                            whitespace: true,
+                            message:
+                              "Tên sản phẩm không được nhập khoảng trống",
+                          },
+                          { min: 25, message: "Tên sản phẩm quá ngắn" },
+                          { max: 70, message: "Tên sản phẩm quá dài" },
+                        ]}
+                        hasFeedback
+                      >
+                        <Input
+                          type="name"
+                          name="name"
+                          size="large"
+                          placeholder="Tên sản phẩm"
+                          value={productForm?.name}
+                          onChange={handleChangedInput}
+                        />
+                      </Form.Item>
+                      {/* <input
+                        type="text"
+                        name="name"
+                        placeholder="Tên sản phẩm"
+                        value={productForm.name}
+                        onChange={handleChangedInput}
+                      /> */}
+                    </div>
+                    <h6>Mô Tả Chi Tiết</h6>
+                    <div className="input-item input-item-textarea ltn__custom-icon">
+                      <Form.Item
+                        name="Mô tả sản phẩm"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Mô tả sản phẩm không được bỏ trống",
+                          },
+                          {
+                            whitespace: true,
+                            message:
+                              "Mô tả sản phẩm không được nhập khoảng trống",
+                          },
+                          { min: 20, message: "Mô tả sản phẩm quá ngắn" },
+                        ]}
+                        hasFeedback
+                      >
+                        <TextArea
+                          name="description"
+                          showCount
+                          maxLength={1000}
+                          placeholder="Mô tả sản phẩm"
+                          value={productForm?.description}
+                          onChange={handleChangedInput}
+                        />
+                      </Form.Item>
+                      {/* <textarea
+                        name="description"
+                        placeholder="Mô tả chi tiết"
+                        onChange={handleChangedInput}
+                        value={productForm.description}
+                      /> */}
+                    </div>
+                  </div>
+                </div>
+                <h6>Giá Sản Phẩm</h6>
+                <div className="row">
+                  <div className="col-md-12">
+                    <div className="input-item input-item-name ltn__custom-icon">
+                      <Form.Item
+                        name="price"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Giá sản phẩm không được bỏ trống",
+                          },
+                          {
+                            whitespace: true,
+                            message: "Giá sản phẩm không nhập khoảng trống",
+                          },
+                          {
+                            min: 6,
+                            message:
+                              "Giá sản phẩm phải lớn hơn hoặc bằng 100.000",
+                          },
+                        ]}
+                        hasFeedback
+                      >
+                        <Input
+                          addonAfter={suffixSelector}
+                          type="number"
+                          name="price"
+                          size="large"
+                          placeholder="Giá sản phẩm"
+                          value={productForm?.price}
+                          onChange={handleChangedInput}
+                        />
+                      </Form.Item>
+                      {/* <input
+                        type="text"
+                        name="price"
+                        placeholder="Giá sản phẩm"
+                        value={productForm.price}
+                        onChange={handleChangedInput}
+                      /> */}
+                    </div>
+                  </div>
+                </div>
+                <h2>2. Chi Tiết</h2>
 
-          <div class="contentform">
-            <h3
-              class="title_sticky"
-              id="jumpto_0"
-              style={{ fontWeight: "bold", fontSize: "30px", color: "red" }}
-            >
-              Thông tin sản phẩm
-            </h3>
-            <div class="leftcontact">
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Tên tài sản:
-                </h3>
-                <Form
-                  name="basic"
-                  wrapperCol={{ span: 35 }}
-                  initialValues={{ remember: true }}
-                  autoComplete="off"
-                >
-                  <Form.Item
-                    name="name"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Tên sản phẩm không được bỏ trống",
-                      },
-                    ]}
+                <div className="row">
+                  <div className="col-md-4">
+                    <h6>Loại Sản Phẩm</h6>
+                    <Form.Item
+                      name="type"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Vui lòng chọn loại sản phẩm",
+                        },
+                      ]}
+                    >
+                      <Select
+                        defaultValue="Loại Sản Phẩm"
+                        style={{ width: "100%" }}
+                        onChange={handleChangeType}
+                        size="large"
+                      >
+                        <Option value="Đất dự án">Đất dự án</Option>
+                        <Option value="Đất thổ cư">Đất thổ cư</Option>
+                        <Option value="Đất nông nghiệp">Đất nông nghiệp</Option>
+                      </Select>
+                    </Form.Item>
+                  </div>
+                  <div className="col-lg-4">
+                    <h6>Trạng Thái Sản Phẩm</h6>
+                    <Form.Item
+                      name="status"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Vui lòng chọn trạng thái sản phẩm",
+                        },
+                      ]}
+                    >
+                      <Select
+                        defaultValue="Trạng Thái Sản Phẩm"
+                        style={{ width: "100%" }}
+                        onChange={handleChangeStatus}
+                        size="large"
+                      >
+                        <Option value="Bán">Bán</Option>
+                        <Option value="Cho thuê">Cho thuê</Option>
+                      </Select>
+                    </Form.Item>
+                  </div>
+                  <div className="col-lg-4">
+                    <h6>Giấy Tờ Pháp Lí</h6>
+                    <Form.Item
+                      name="legalDocuments"
+                      rules={[
+                        {
+                          required: true,
+                          message: "Vui lòng chọn giấy tờ pháp lý",
+                        },
+                      ]}
+                    >
+                      <Select
+                        defaultValue="Giấy Tờ Pháp Lí"
+                        style={{ width: "100%" }}
+                        size="large"
+                        onChange={handleChangeLegalDocuments}
+                      >
+                        <Option value="Sổ đỏ">Sổ đỏ</Option>
+                        <Option value="Hợp đồng mua bán">
+                          Hợp đồng mua bán
+                        </Option>
+                        <Option value="Đang chờ sổ">Đang chờ sổ</Option>
+                      </Select>
+                    </Form.Item>
+                  </div>
+
+                  <div
+                    className="col-md-12"
+                    style={{ marginTop: "2rem", marginBottom: "2rem" }}
                   >
-                    <Input
-                      maxLength={60}
-                      onChange={handleChangedInput}
-                      value={productForm.name}
-                      name="name"
+                    <h6>Diện Tích</h6>
+                    <div className="input-item input-item-name ltn__custom-icon">
+                      <Form.Item
+                        name="acreage"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Diện tích không được bỏ trống",
+                          },
+                          {
+                            whitespace: true,
+                            message: "Diện tích không được nhập khoảng trống",
+                          },
+                        ]}
+                        hasFeedback
+                      >
+                        <Input
+                          type="number"
+                          size="large"
+                          name="acreage"
+                          placeholder="Diện tích sản phẩm"
+                          value={productForm?.acreage}
+                          onChange={handleChangedInput}
+                        />
+                      </Form.Item>
+                      {/* <input
+                        type="text"
+                        name="acreage"
+                        placeholder="Diện tích"
+                        value={productForm.acreage}
+                        onChange={handleChangedInput}
+                      /> */}
+                    </div>
+                  </div>
+                </div>
+
+                <h2 style={{ marginTop: "2rem" }}>3. Địa Chỉ</h2>
+                <h6>Địa chỉ chi tiết</h6>
+                <div className="row">
+                  <div className="col-lg-4 col-md-6">
+                    <div className="input-item">
+                      <Form.Item
+                        name="city"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng chọn Tỉnh / Thành phố",
+                          },
+                        ]}
+                      >
+                        <Select
+                          showSearch
+                          style={{ width: "100%" }}
+                          placeholder="Chọn tỉnh/ Thành phố"
+                          size="large"
+                          filterOption={(input, option) =>
+                            option.label
+                              .toLowerCase()
+                              .indexOf(input.toLowerCase()) >= 0
+                          }
+                          filterSort={(optionA, optionB) =>
+                            optionA.label
+                              .toLowerCase()
+                              .localeCompare(optionB.label.toLowerCase())
+                          }
+                          options={
+                            citys &&
+                            citys.map((value) => {
+                              return {
+                                key: value.name,
+                                label: value.name,
+                                value: value.code,
+                              };
+                            })
+                          }
+                          onChange={(value) => {
+                            GetDistricts(value);
+                          }}
+                        />
+                      </Form.Item>
+                    </div>
+                  </div>
+                  <div className="col-lg-4 col-md-6">
+                    <div className="input-item">
+                      <Form.Item
+                        name="district"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng chọn Quận / Huyện",
+                          },
+                        ]}
+                      >
+                        <Select
+                          showSearch
+                          style={{ width: "100%" }}
+                          placeholder="Chọn quận/ huyện"
+                          size="large"
+                          filterOption={(input, option) =>
+                            option.label
+                              .toLowerCase()
+                              .indexOf(input.toLowerCase()) >= 0
+                          }
+                          filterSort={(optionA, optionB) =>
+                            optionA.label
+                              .toLowerCase()
+                              .localeCompare(optionB.label.toLowerCase())
+                          }
+                          options={
+                            districts &&
+                            districts.map((value) => {
+                              return {
+                                key: value.name,
+                                label: value.name,
+                                value: value.code,
+                              };
+                            })
+                          }
+                          onChange={(value) => GetWards(value)}
+                        />
+                      </Form.Item>
+                    </div>
+                  </div>
+                  <div className="col-lg-4 col-md-6">
+                    <div className="input-item">
+                      <Form.Item
+                        name="ward"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng chọn Phường / Xã",
+                          },
+                        ]}
+                      >
+                        <Select
+                          showSearch
+                          style={{ width: "100%" }}
+                          size="large"
+                          placeholder="Chọn Phường / Xã"
+                          filterOption={(input, option) =>
+                            option.label
+                              .toLowerCase()
+                              .indexOf(input.toLowerCase()) >= 0
+                          }
+                          filterSort={(optionA, optionB) =>
+                            optionA.label
+                              .toLowerCase()
+                              .localeCompare(optionB.label.toLowerCase())
+                          }
+                          options={
+                            wards &&
+                            wards.map((value) => {
+                              return {
+                                key: value.name,
+                                label: value.name,
+                                value: value.name,
+                              };
+                            })
+                          }
+                          onChange={(value) => setWard(value)}
+                        />
+                      </Form.Item>
+                    </div>
+                  </div>
+                </div>
+                <div className="row" style={{ marginTop: "1rem" }}>
+                  <div className="col-md-12">
+                    <h6>Địa Chỉ Cụ Thể</h6>
+                    <div className="input-item input-item-name ltn__custom-icon">
+                      <Form.Item
+                        name="Địa chỉ nhà"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Địa chỉ nhà không được bỏ trống",
+                          },
+                          {
+                            whitespace: true,
+                            message: "Địa chỉ nhà không được nhập khoảng trống",
+                          },
+                        ]}
+                        hasFeedback
+                      >
+                        <Input
+                          type="address"
+                          name="address"
+                          size="large"
+                          placeholder="Địa chỉ nhà"
+                          value={address}
+                          onChange={(value) => setAddress(value.target.value)}
+                        />
+                      </Form.Item>
+                      {/* <input
+                        type="text"
+                        name="ltn__name"
+                        placeholder="Nhập địa chỉ nhà"
+                        value={address}
+                        onChange={(value) => setAddress(value.target.value)}
+                      /> */}
+                    </div>
+                  </div>
+                </div>
+                <div className="row">
+                  <div className="col-md-12">
+                    <h6>Địa Chỉ Nhận Được</h6>
+                    <Search
+                      type="address"
+                      style={{ height: "80px" }}
+                      placeholder="Địa chỉ nhận được"
+                      allowClear
+                      enterButton="Tìm kiếm"
                       size="large"
-                      placeholder="Tên sản phẩm"
-                      prefix={<UserOutlined />}
+                      value={`${address ? address + " ," : ""}${
+                        ward ? ward + " ," : ""
+                      }${district ? district + " ," : ""}${city}`}
+                      onSearch={onSearch}
                     />
-                  </Form.Item>
-                </Form>
-              </div>
+                  </div>
+                </div>
+                <div className="row" style={{ marginTop: "1rem" }}>
+                  <div className="col-lg-12">
+                    <div className="property-details-google-map mb-60">
+                      <iframe
+                        src={`https://maps.google.com/maps?q=${lat},${lng}&output=embed`}
+                        width="100%"
+                        height="100%"
+                        frameBorder={0}
+                        allowFullScreen
+                        aria-hidden="false"
+                        tabIndex={0}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <h2>4. Hình Ảnh</h2>
+                <h6>Danh sách hình ảnh</h6>
+                <div className="row">
+                  <div className="col-lg-12">
+                    <ImgCrop rotate onModalOk={(file) => OnModalOk(file)}>
+                      <Upload
+                        listType="picture-card"
+                        fileList={fileList}
+                        onChange={onChange}
+                        onPreview={handlePreview}
+                        status="success"
+                      >
+                        {fileList.length < 5 && "+ Upload"}
+                      </Upload>
+                    </ImgCrop>
+                  </div>
+                </div>
 
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Loại sản phẩm:
-                </h3>
-                <select
-                  id="my_select"
-                  name="type"
-                  onChange={handleChangedInput}
-                >
-                  <option selected="selected" value="0">
-                    --- Lựa chọn ---
-                  </option>
-                  <option value="Đất dự án">Đất dự án</option>
-                  <option value="Đất thổ cư">Đất thổ cư</option>
-                  <option value="Đất nông nghiệp">Đất nông nghiệp</option>
-                </select>
-                <div class="validation"></div>
-              </div>
-
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Trạng thái sản phẩm:
-                </h3>
-                <select
-                  id="my_select"
-                  name="status"
-                  onChange={handleChangedInput}
-                >
-                  <option selected="selected" value="0">
-                    --- Lựa chọn ---
-                  </option>
-                  <option value="Bán">Bán</option>
-                  <option value="Cho thuê">Cho thuê</option>
-                </select>
-                <div class="validation"></div>
-              </div>
-
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Giấy tờ pháp lí:
-                </h3>
-                <select name="legalDocuments" onChange={handleChangedInput}>
-                  <option selected="selected" value="0">
-                    --- Lựa chọn ---
-                  </option>
-                  <option value="Sổ đỏ">Sổ đỏ</option>
-                  <option value="Hợp đồng mua bán">Hợp đồng mua bán</option>
-                  <option value="Đang chờ sổ">Đang chờ sổ</option>
-                </select>
-                <div class="validation"></div>
-              </div>
-            </div>
-
-            <div class="rightcontact">
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Diện tích (m<sup>2</sup>)
-                </h3>
-
-                <Form>
-                  <Input
-                    onChange={handleChangedInput}
-                    type="number"
-                    name="acreage"
-                    value={productForm.acreage}
-                    size="large"
-                    placeholder="Diện tích"
-                    prefix={<i class="far fa-square"></i>}
-                    style={{ width: "100%" }}
-                  />
-                </Form>
-              </div>
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Giá: (VNĐ)
-                </h3>
-                <Form>
-                  <Input
-                    onChange={handleChangedInput}
-                    type="number"
-                    name="price"
-                    value={productForm.price}
-                    size="large"
-                    placeholder="Giá sản phẩm"
-                    prefix={<i class="fas fa-hand-holding-usd"></i>}
-                    style={{ width: "100%" }}
-                  />
-                </Form>
-              </div>
-              <div class="form-group">
-                <h3 class="title_sticky">Địa chỉ</h3>
-                <Row>
-                  <Select
-                    showSearch
-                    style={{ width: 250 }}
-                    placeholder="Chọn tỉnh/ Thành phố"
-                    filterOption={(input, option) =>
-                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
-                      0
-                    }
-                    filterSort={(optionA, optionB) =>
-                      optionA.label
-                        .toLowerCase()
-                        .localeCompare(optionB.label.toLowerCase())
-                    }
-                    options={
-                      citys &&
-                      citys.map((value) => {
-                        return {
-                          key: value.name,
-                          label: value.name,
-                          value: value.code,
-                        };
-                      })
-                    }
-                    onChange={(value) => {
-                      GetDistricts(value);
+                <div className="btn-wrapper text-center mt-30">
+                  <Button
+                    type="danger"
+                    className="btn theme-btn-1 btn-effect-1 text-uppercase"
+                    htmlType="submit"
+                    style={{
+                      color: "black",
+                      width: "300px",
+                      height: "100px",
+                      fontSize: "25px",
+                      fontWeight: "bold",
                     }}
-                  />
-                  <Select
-                    showSearch
-                    style={{ width: 230 }}
-                    placeholder="Chọn quận/ huyện"
-                    filterOption={(input, option) =>
-                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
-                      0
-                    }
-                    filterSort={(optionA, optionB) =>
-                      optionA.label
-                        .toLowerCase()
-                        .localeCompare(optionB.label.toLowerCase())
-                    }
-                    options={
-                      districts &&
-                      districts.map((value) => {
-                        return {
-                          key: value.name,
-                          label: value.name,
-                          value: value.code,
-                        };
-                      })
-                    }
-                    onChange={(value) => GetWards(value)}
-                  />
-
-                  <Select
-                    showSearch
-                    style={{ width: 210 }}
-                    placeholder="Chọn phường/ xã"
-                    filterOption={(input, option) =>
-                      option.label.toLowerCase().indexOf(input.toLowerCase()) >=
-                      0
-                    }
-                    filterSort={(optionA, optionB) =>
-                      optionA.label
-                        .toLowerCase()
-                        .localeCompare(optionB.label.toLowerCase())
-                    }
-                    options={
-                      wards &&
-                      wards.map((value) => {
-                        return {
-                          key: value.name,
-                          label: value.name,
-                          value: value.name,
-                        };
-                      })
-                    }
-                    onChange={(value) => setWard(value)}
-                  />
-                  <Input
-                    style={{ marginTop: "20px" }}
-                    placeholder="Nhập địa chỉ nhà"
-                    value={address}
-                    onChange={(value) => setAddress(value.target.value)}
-                  />
-                  <Search
-                    style={{ marginTop: "20px" }}
-                    placeholder="Địa chỉ nhận được"
-                    allowClear
-                    enterButton="Tìm kiếm"
                     size="large"
-                    value={`${address ? address + " ," : ""}${
-                      ward ? ward + " ," : ""
-                    }${district ? district + " ," : ""}${city}`}
-                    onSearch={onSearch}
-                  />
-                </Row>
-              </div>
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Mô tả chi tiết
-                </h3>
-                <Form
-                  name="basic"
-                  wrapperCol={{ span: 35 }}
-                  initialValues={{ remember: true }}
-                  autoComplete="off"
-                >
-                  <Form.Item
-                    name="description"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Chi tiết sản phẩm không được bỏ trống",
-                      },
-                    ]}
                   >
-                    <TextArea
-                      showCount
-                      maxLength={1000}
-                      onChange={handleChangedInput}
-                      value={productForm.description}
-                      name="description"
-                      size="large"
-                      placeholder="Mô tả chi tiết sản phẩm"
-                      prefix={<i class="fas fa-audio-description"></i>}
-                    />
-                  </Form.Item>
-                </Form>
-              </div>
-            </div>
-            <div className="imagecontact">
-              <div class="form-group">
-                <h3 class="title_sticky" id="jumpto_0">
-                  Danh sách hình ảnh
-                </h3>
-                <Upload
-                  {...props}
-                  onRemove={(file) => {
-                    onRemoveImage(file);
-                    return { ...props };
-                  }}
-                  listType="picture-card"
-                  fileList={fileList}
-                  onChange={onChange}
-                  onPreview={handlePreview}
-                  status="success"
-                >
-                  {fileList.length < 5 && "+ Upload"}
-                </Upload>
-                <div class="validation"></div>
-              </div>
+                    Gữi Bài
+                  </Button>
+                </div>
+              </Form>
             </div>
           </div>
-          <div
-            className="row"
-            style={{ width: "100%", borderTop: "1px solid #eee" }}
-          >
-            <h3
-              class="title_sticky"
-              id="jumpto_0"
-              style={{ fontWeight: "bold", fontSize: "30px", color: "red" }}
-            >
-              Vị trí sản phẩm
-            </h3>
-            <div className="row center" style={{ width: "100%" }}>
-              <iframe
-                title="ggmap"
-                src={`https://maps.google.com/maps?q=${lat},${lng}&output=embed`}
-                className="ggmap"
-                height="600"
-                width="100%"
-              ></iframe>
-            </div>
-          </div>
-          <div className="row center">
-            <button
-              style={{ width: "80%", fontWeight: "bold", fontSize: "30px" }}
-              onClick={handleCreate}
-              class="bouton-contact"
-            >
-              Đăng Bài
-            </button>
-          </div>
-        </Form>
-      </Row>
+        </div>
+      </div>
       <Modal
         visible={previewVisible}
         title="Chi tiết hình ảnh"
@@ -619,6 +792,6 @@ export default function PostGround() {
       >
         <img alt="example" style={{ width: "100%" }} src={previewImage} />
       </Modal>
-    </>
+    </div>
   );
 }

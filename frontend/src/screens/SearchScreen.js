@@ -14,6 +14,7 @@ import { SearchOutlined } from "@ant-design/icons";
 const { Option } = Select;
 
 export default function SearchScreen(props) {
+  console.log(props.history,"adad");
   const [citys, setCitys] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -263,9 +264,7 @@ export default function SearchScreen(props) {
                           </span>
                           <Select
                             showSearch
-                            style={{
-                              width: 240,
-                            }}
+                            style={{ width: "100%" }}
                             placeholder="Chọn tỉnh/ thành phố"
                             value={city}
                             filterOption={(input, option) =>

@@ -21,18 +21,18 @@ export default function SearchGroundBox(props) {
     />
   );
   return (
-    <div className="row" style={{ justifyContent: "center",marginBottom:"1rem" }}>
-      <Space direction="vertical">
-        <Search
-          placeholder="Tìm kiếm"
-          enterButton="Search"
-          size="large"
-          suffix={suffix}
-          onSearch={submitHandler}
+    <div className="ltn__search-widget mb-30">
+      <form action="#" onSubmit={submitHandler}>
+        <input
+          type="text"
+          name="search"
+          placeholder="Tìm kiếm theo tên"
           onChange={(e) => setName(e.target.value)}
-          style={{width:450}}
         />
-      </Space>
+        <button type="submit">
+          <i className="fas fa-search" />
+        </button>
+      </form>
     </div>
   );
 }
