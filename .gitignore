@@ -1,3 +1,6 @@
+server/node_modules
+client/node_modules
+# dependencies
 node_modules
 /.pnp
 .pnp.js
@@ -21,4 +24,4 @@ yarn-error.log*
 package-lock.json
 
 .env
-/uploads/*.jpg
+
