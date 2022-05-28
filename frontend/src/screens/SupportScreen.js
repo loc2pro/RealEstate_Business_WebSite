@@ -12,10 +12,7 @@ let allSelectedUser = {};
 //   window.location.host.indexOf("localhost") >= 0
 //     ? "http://127.0.0.1:5000"
 //     : window.location.host;
-    const ENDPOINT =
-    window.location.host.indexOf("localhost") >= 0
-      ? "https://realestate-be-app.herokuapp.com"
-      : window.location.host;
+const ENDPOINT = "https://realestate-be-app.herokuapp.com";
 export default function SupportScreen() {
   const [selectedUser, setSelectedUser] = useState({});
   const [socket, setSocket] = useState(null);

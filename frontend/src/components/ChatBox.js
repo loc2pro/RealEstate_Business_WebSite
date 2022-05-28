@@ -3,10 +3,12 @@ import socketIOClient from "socket.io-client";
 import styled from "styled-components";
 import Robot from "../assets/robot.gif";
 import { MessageOutlined } from "@ant-design/icons";
-const ENDPOINT =
-  window.location.host.indexOf("localhost") >= 0
-    ? "http://127.0.0.1:5000"
-    : window.location.host;
+// const ENDPOINT =
+//   window.location.host.indexOf("localhost") >= 0
+//     ? "http://127.0.0.1:5000"
+//     : window.location.host;
+
+const ENDPOINT = "https://realestate-be-app.herokuapp.com";
 
 export default function ChatBox(props) {
   const { userInfo } = props;
@@ -102,7 +104,7 @@ export default function ChatBox(props) {
           </div>
         </div>
       ) : (
-        <div className="card card-body" >
+        <div className="card card-body">
           <div className="row">
             <div
               className="col-10"
@@ -169,7 +171,12 @@ export default function ChatBox(props) {
               </div>
               <button
                 type="submit"
-                style={{ width: "100%", height: "50px", background: "orange" ,borderRadius:"20px"}}
+                style={{
+                  width: "100%",
+                  height: "50px",
+                  background: "orange",
+                  borderRadius: "20px",
+                }}
               >
                 Gữi
               </button>
