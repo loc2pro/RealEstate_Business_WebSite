@@ -18,7 +18,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-mongoose.connect(process.env.MONGODB_URL || "mongodb://localhost/batdongsan", {
+mongoose.connect(process.env.MONGODB_URL 
+  // || "mongodb://localhost/batdongsan"
+  , {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });

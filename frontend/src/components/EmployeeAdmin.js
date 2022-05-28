@@ -27,6 +27,7 @@ import {
   updateSellerAdmin,
 } from "../actions/userActions";
 import LoadingBox from "./LoadingBox";
+import urlImages from "../api/url";
 import MessageBox from "./MessageBox";
 const { Option } = Select;
 
@@ -280,6 +281,12 @@ function EmployeeAdmin(props) {
       dataIndex: "name",
       width: 200,
       fixed: "left",
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: ["seller", "logo"],
+      width: 100,
+      render: (theImageURL) => <img src={`${urlImages}${theImageURL}`} />,
     },
     {
       title: "Lương cơ bản",

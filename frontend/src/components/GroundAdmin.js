@@ -13,6 +13,7 @@ import { useDispatch } from "react-redux";
 import { deleteGround, updateGround } from "../actions/groundActions";
 import { deleteProduct, updateProduct } from "../actions/productActions";
 import LoadingBox from "./LoadingBox";
+import urlImages from "../api/url";
 import MessageBox from "./MessageBox";
 const { TextArea } = Input;
 
@@ -84,6 +85,11 @@ function GroundAdmin(props) {
       dataIndex: "name",
       width: 400,
       fixed: "left",
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: "image",
+      render: (theImageURL) => <img src={`${urlImages}${theImageURL[0]}`} />,
     },
     {
       title: "Loại",

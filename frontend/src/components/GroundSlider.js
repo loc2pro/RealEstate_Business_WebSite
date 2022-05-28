@@ -1,31 +1,47 @@
-import React from "react";
+import { Image } from "antd";
+import React, { useState } from "react";
+import { FaArrowAltCircleLeft, FaArrowAltCircleRight } from "react-icons/fa";
 import urlImages from "../api/url";
-import parse from "html-react-parser";
-import { Carousel, Image } from "antd";
 function GroundSlider(props) {
   const { ground } = props;
-  console.log(ground, "img");
+  const [current, setCurrent] = useState(0);
+  const length = ground?.ground?.image?.length;
+
+  const nextSlide = () => {
+    setCurrent(current === length - 1 ? 0 : current + 1);
+  };
+
+  const prevSlide = () => {
+    setCurrent(current === 0 ? length - 1 : current - 1);
+  };
+
+  if (
+    !Array.isArray(ground?.ground?.image) ||
+    ground?.ground?.image?.length <= 0
+  ) {
+    return null;
+  }
   return (
-    <div className="ltn__img-slider-area mb-90">
-      <div className="container-fluid">
-        <div
-          className="row ltn__image-slider-5-active slick-arrow-1 
-          slick-arrow-1-inner ltn__no-gutter-all"
-        >
-          {ground?.ground?.image.map((item) => (
-            <div className="col-lg-12">
-              <div className="ltn__img-slide-item-4">
-                <Image
-                  src={`${urlImages}${item}`}
-                  alt={item.name}
-                  width={700}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <section className="slider">
+      <FaArrowAltCircleLeft className="left-arrow" onClick={prevSlide} />
+      <FaArrowAltCircleRight className="right-arrow" onClick={nextSlide} />
+      {ground?.ground?.image?.map((slide, index) => {
+        return (
+          <div
+            className={index === current ? "slide active" : "slide"}
+            key={index}
+          >
+            {index === current && (
+              <Image
+                src={`${urlImages}${slide}`}
+                alt={slide.name}
+                width={700}
+              />
+            )}
+          </div>
+        );
+      })}
+    </section>
   );
 }
 

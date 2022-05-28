@@ -1,9 +1,4 @@
-import {
-  DeleteOutlined,
-  DollarCircleOutlined,
-  EyeOutlined,
-  SearchOutlined,
-} from "@ant-design/icons";
+import { DeleteOutlined, EyeOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   Input,
   Modal,
@@ -15,12 +10,8 @@ import {
 } from "antd";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { deletePost } from "../actions/postActions";
-import {
-  deleteProduct,
-  updateInstock,
-  updateProduct,
-} from "../actions/productActions";
+import { deleteProduct, updateProduct } from "../actions/productActions";
+import urlImages from "../api/url";
 import LoadingBox from "./LoadingBox";
 import MessageBox from "./MessageBox";
 const { TextArea } = Input;
@@ -95,6 +86,11 @@ function ProductAdmin(props) {
       fixed: "left",
       width: 400,
       dataIndex: "name",
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: "image",
+      render: (theImageURL) => <img src={`${urlImages}${theImageURL[0]}`} />,
     },
     {
       title: "Loại",

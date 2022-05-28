@@ -319,7 +319,7 @@ function ShopSideBarScreen(props) {
                     <ul>
                       <Link
                         className={"all" === type ? "active" : ""}
-                        to={getFilterUrl({ type: "all" })}
+                        to={getFilterUrl({ type: "all", page: 1 })}
                       >
                         <li>
                           <label className="checkbox-item">

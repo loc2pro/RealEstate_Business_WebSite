@@ -22,7 +22,7 @@ export default function SearchGround(props) {
       {ground?.browse && ground?.countInStock > 0 && (
         <div className="ltn__product-item ltn__product-item-4 ltn__product-item-5 text-center---">
           <div className="product-img go-top">
-            <Link to={`/ground/${ground._id}`}>
+            <Link to={`/groundDetails/${ground._id}`}>
               <img src={`${urlImages}${ground?.image[0]}`} alt={ground.name} />
             </Link>
             <div className="real-estate-agent">
@@ -43,12 +43,12 @@ export default function SearchGround(props) {
               </ul>
             </div>
             <h2 className="product-title go-top">
-              <Link to={`/ground/${ground._id}`}>{ground?.name}</Link>
+              <Link to={`/groundDetails/${ground._id}`}>{ground?.name}</Link>
             </h2>
             <div className="product-img-location go-top">
               <ul>
                 <li>
-                  <Link to={`/product/${ground._id}`}>
+                  <Link to={`/groundDetails/${ground._id}`}>
                     <i className="flaticon-pin" />
                     {ground?.ward}, {ground?.district}, {ground?.city}
                   </Link>
@@ -66,7 +66,7 @@ export default function SearchGround(props) {
                 <li>
                   <span className="go-top">
                     <Link
-                      to={`/ground/${ground._id}`}
+                      to={`/groundDetails/${ground._id}`}
                       title="Thông tin chi tiết"
                     >
                       <i className="flaticon-expand" />

@@ -29,6 +29,7 @@ function Favorite(props) {
   const removeFromCartHandler = (id) => {
     dispatch(removeFromCart(id));
   };
+  console.log(cartItems, "1");
   return (
     <div className="liton__shoping-cart-area mb-120">
       <div className="container">
@@ -47,7 +48,7 @@ function Favorite(props) {
                           x
                         </td>
                         <td className="cart-product-image">
-                          {item.bedroom ? (
+                          {item.type ? (
                             <Link to={`/groundDetails/${item.product}`}>
                               <img
                                 src={`${urlImages}${item.image[0]}`}
@@ -65,7 +66,7 @@ function Favorite(props) {
                         </td>
                         <td className="cart-product-info">
                           <h4>
-                            {item.bedroom ? (
+                            {item.type ? (
                               <Link to={`/groundDetails/${item.product}`}>
                                 {item.name}
                               </Link>

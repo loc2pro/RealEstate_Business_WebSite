@@ -23,6 +23,7 @@ function PostHistory(props) {
     });
   });
   const { products, loading, error } = props;
+  console.log(products);
   const history = useHistory();
   const dispatch = useDispatch();
   const [isEditing, setIsEditing] = useState(false);
@@ -90,6 +91,7 @@ function PostHistory(props) {
       key: "1",
       title: "Tên sản phẩm",
       dataIndex: "name",
+      fixed: "left",
     },
     {
       key: "2",
@@ -112,12 +114,18 @@ function PostHistory(props) {
       dataIndex: "price",
     },
     {
-      key: "6",
+      key: "7",
+      title: "Trạng Thái Bán",
+      dataIndex: "countInStock",
+    },
+    {
+      key: "8",
       title: "Action",
       key: "action",
+      fixed: "right",
       render: (record) => (
         <Space size="middle">
-          {record.browse ? (
+          {record.browse && record.countInStock == 1 ? (
             <Popconfirm
               title="Bạn có muốn chuyển trang để xem thông tin?"
               onConfirm={() => handleClick(record._id)}
@@ -127,19 +135,25 @@ function PostHistory(props) {
               </a>
             </Popconfirm>
           ) : (
-            <Popconfirm title="Sản phẩm của bạn chưa được duyệt?">
+            <Popconfirm title="Sản phẩm của bạn chưa được duyệt hoặc đã bán?">
               <a disabled>
                 <EyeOutlined />
               </a>
             </Popconfirm>
           )}
-          <a>
-            <EditOutlined
-              onClick={() => {
-                onEditProduct(record);
-              }}
-            />
-          </a>
+          {record.browse && record.countInStock == 1 ? (
+            <a>
+              <EditOutlined
+                onClick={() => {
+                  onEditProduct(record);
+                }}
+              />
+            </a>
+          ) : (
+            <a disabled>
+              <EditOutlined />
+            </a>
+          )}
 
           <Popconfirm
             title="Bạn có muốn xóa sản phẩm?"
@@ -161,7 +175,11 @@ function PostHistory(props) {
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
         <div>
-          <Table columns={columns} dataSource={dataSource} />
+          <Table
+            columns={columns}
+            dataSource={dataSource}
+            scroll={{ x: 2000, y: 700 }}
+          />
           <Modal
             title="Chỉnh sửa sản phẩm "
             visible={isEditing}

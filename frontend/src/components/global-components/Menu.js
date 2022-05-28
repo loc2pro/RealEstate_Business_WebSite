@@ -257,7 +257,7 @@ function Menu(props) {
                             <Link to="/profile">Tài khoản</Link>
                           </li>
                           <li>
-                            <Link to="/post"> Bán nhà đất</Link>
+                            <Link to="/postHistory"> Lịch sử gữi bài</Link>
                           </li>
                           <li>
                             <Link to="/login" onClick={signoutHandler}>
@@ -518,9 +518,8 @@ function Menu(props) {
             {cartItems.map((item) => (
               <div className="mini-cart-item clearfix">
                 <div className="mini-cart-img go-top">
-                  <Link to="/product-details">
-                    <img src={`${urlImages}${item.image[0]}`} alt="Image" />
-                  </Link>
+                  <img src={`${urlImages}${item.image[0]}`} alt="Image" />
+
                   <span
                     className="mini-cart-item-delete"
                     onClick={() => removeFromCartHandler(item.product)}
@@ -529,9 +528,7 @@ function Menu(props) {
                   </span>
                 </div>
                 <div className="mini-cart-info go-top">
-                  <h6>
-                    <Link to="/product-details">{item.name}</Link>
-                  </h6>
+                  <h6>{item.name}</h6>
                   <span className="mini-cart-quantity">
                     {item.price.toLocaleString("it-IT", {
                       style: "currency",

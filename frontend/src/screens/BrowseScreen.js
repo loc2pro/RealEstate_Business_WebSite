@@ -206,7 +206,6 @@ function BrowseScreen() {
               type="primary"
               block
               style={{
-                marginTop: "100px",
                 color: "black",
                 fontWeight: "bold",
                 fontSize: "20px",
@@ -222,7 +221,6 @@ function BrowseScreen() {
               type="primary"
               block
               style={{
-                marginTop: "100px",
                 color: "black",
                 fontWeight: "bold",
                 fontSize: "20px",
@@ -249,7 +247,6 @@ function BrowseScreen() {
               type="primary"
               block
               style={{
-                marginTop: "100px",
                 color: "black",
                 fontWeight: "bold",
                 fontSize: "20px",
@@ -265,7 +262,6 @@ function BrowseScreen() {
               type="primary"
               block
               style={{
-                marginTop: "100px",
                 color: "black",
                 fontWeight: "bold",
                 fontSize: "20px",

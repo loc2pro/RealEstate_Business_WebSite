@@ -173,13 +173,13 @@ function GroundSideBarScreen(props) {
                           value={status}
                           onChange={(e) => {
                             props.history.push(
-                              getFilterUrl({ status: e.target.value })
+                              getFilterUrl({ status: e.target.value, page: 1 })
                             );
                           }}
                         >
                           <option value="all">Thể loại</option>
                           <option value="Bán">Bán</option>
-                          <option value="Cho Thuê">Cho thuê</option>
+                          <option value="Cho thuê">Cho thuê</option>
                         </select>
                       </div>
                     </li>
@@ -190,7 +190,7 @@ function GroundSideBarScreen(props) {
                           value={order}
                           onChange={(e) => {
                             props.history.push(
-                              getFilterUrl({ order: e.target.value })
+                              getFilterUrl({ order: e.target.value, page: 1 })
                             );
                           }}
                         >
@@ -291,7 +291,7 @@ function GroundSideBarScreen(props) {
                     <ul>
                       <Link
                         className={"all" === type ? "active" : ""}
-                        to={getFilterUrl({ type: "all" })}
+                        to={getFilterUrl({ type: "all", page: 1 })}
                       >
                         <li>
                           <span>
@@ -303,7 +303,7 @@ function GroundSideBarScreen(props) {
                       {categories?.map((c) => (
                         <Link
                           className={c === type ? "active" : ""}
-                          to={getFilterUrl({ type: c })}
+                          to={getFilterUrl({ type: c, page: 1 })}
                         >
                           <li key={c}>
                             <label className="checkbox-item">
@@ -323,7 +323,7 @@ function GroundSideBarScreen(props) {
                     <ul>
                       {prices?.map((p) => (
                         <Link
-                          to={getFilterUrl({ min: p.min, max: p.max })}
+                          to={getFilterUrl({ min: p.min, max: p.max, page: 1 })}
                           className={
                             `${p.min}-${p.max}` === `${min}-${max}`
                               ? "active"

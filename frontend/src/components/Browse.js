@@ -12,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { deletePost } from "../actions/postActions";
 import { updateProduct } from "../actions/productActions";
+import urlImages from "../api/url";
 import LoadingBox from "./LoadingBox";
 import MessageBox from "./MessageBox";
 const { TextArea } = Input;
@@ -46,6 +47,7 @@ function Browse(props) {
         description: item.description,
         direction: item.direction,
         floor: item.floor,
+        image: item.image,
       });
     }
   }
@@ -63,7 +65,7 @@ function Browse(props) {
       Table.SELECTION_NONE,
       {
         key: "odd",
-        text: "Select Odd Row",
+        text: "Chọn ô chẳn",
         onSelect: (changableRowKeys) => {
           let newSelectedRowKeys = [];
           newSelectedRowKeys = changableRowKeys.filter((key, index) => {
@@ -77,7 +79,7 @@ function Browse(props) {
       },
       {
         key: "even",
-        text: "Select Even Row",
+        text: "Chọn ô lẻ",
         onSelect: (changableRowKeys) => {
           let newSelectedRowKeys = [];
           newSelectedRowKeys = changableRowKeys.filter((key, index) => {
@@ -134,12 +136,18 @@ function Browse(props) {
     {
       title: "Tên sản phẩm",
       dataIndex: "name",
-      width: 100,
+      width: 200,
       fixed: "left",
     },
     {
+      title: "Hình ảnh",
+      dataIndex: "image",
+      width: 50,
+      render: (theImageURL) => <img src={`${urlImages}${theImageURL[0]}`} />,
+    },
+    {
       title: "Loại",
-      width: 200,
+      width: 100,
       dataIndex: "type",
       filters: [
         {

@@ -49,6 +49,8 @@ groundRouter.get(
       ...typeFilter,
       ...priceFilter,
       ...statusFilter,
+      browse: true,
+      countInStock: 1,
     });
     const grounds = await Ground.find({
       ...nameFilter,

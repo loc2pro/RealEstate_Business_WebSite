@@ -17,6 +17,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { deletePost } from "../actions/postActions";
 import { updateBrowse } from "../actions/productActions";
+import urlImages from "../api/url";
 import LoadingBox from "./LoadingBox";
 import MessageBox from "./MessageBox";
 const { TextArea } = Input;
@@ -44,6 +45,7 @@ function BrowseGround(props) {
         type: item.type,
         price: item.price,
         address: item.address,
+        image: item.image,
       });
     }
   }
@@ -61,7 +63,7 @@ function BrowseGround(props) {
       Table.SELECTION_NONE,
       {
         key: "odd",
-        text: "Select Odd Row",
+        text: "Chọn ô chẳn",
         onSelect: (changableRowKeys) => {
           let newSelectedRowKeys = [];
           newSelectedRowKeys = changableRowKeys.filter((key, index) => {
@@ -75,7 +77,7 @@ function BrowseGround(props) {
       },
       {
         key: "even",
-        text: "Select Even Row",
+        text: "Chọn ô lẻ",
         onSelect: (changableRowKeys) => {
           let newSelectedRowKeys = [];
           newSelectedRowKeys = changableRowKeys.filter((key, index) => {
@@ -139,6 +141,12 @@ function BrowseGround(props) {
       dataIndex: "name",
       width: 100,
       fixed: "left",
+    },
+    {
+      title: "Hình ảnh",
+      dataIndex: "image",
+      width: 40,
+      render: (theImageURL) => <img src={`${urlImages}${theImageURL[0]}`} />,
     },
     {
       title: "Loại",

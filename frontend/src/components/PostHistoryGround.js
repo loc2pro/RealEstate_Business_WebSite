@@ -93,6 +93,7 @@ function PostHistoryGround(props) {
   const columns = [
     {
       key: "1",
+      fixed: "left",
       title: "Tên sản phẩm",
       dataIndex: "name",
     },
@@ -118,11 +119,17 @@ function PostHistoryGround(props) {
     },
     {
       key: "6",
+      title: "Trạng thái bán",
+      dataIndex: "countInStock",
+    },
+    {
+      key: "7",
+      fixed: "right",
       title: "Action",
       key: "action",
       render: (record) => (
         <Space size="middle">
-          {record.browse ? (
+          {record.browse && record.countInStock == 1 ? (
             <Popconfirm
               title="Bạn có muốn chuyển trang để xem thông tin?"
               onConfirm={() => handleClick(record._id)}
@@ -138,13 +145,19 @@ function PostHistoryGround(props) {
               </a>
             </Popconfirm>
           )}
-          <a>
-            <EditOutlined
-              onClick={() => {
-                onEditProduct(record);
-              }}
-            />
-          </a>
+          {record.browse && record.countInStock == 1 ? (
+            <a>
+              <EditOutlined
+                onClick={() => {
+                  onEditProduct(record);
+                }}
+              />
+            </a>
+          ) : (
+            <a disabled>
+              <EditOutlined />
+            </a>
+          )}
 
           <Popconfirm
             title="Bạn có muốn xóa sản phẩm?"
@@ -166,7 +179,11 @@ function PostHistoryGround(props) {
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
         <div>
-          <Table columns={columns} dataSource={dataSource} />
+          <Table
+            columns={columns}
+            dataSource={dataSource}
+            scroll={{ x: 2000, y: 700 }}
+          />
           <Modal
             title="Chỉnh sửa sản phẩm "
             visible={isEditing}

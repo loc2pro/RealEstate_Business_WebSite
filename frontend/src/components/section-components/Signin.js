@@ -158,7 +158,6 @@ function Signin(props) {
                         <div className="modal-product-info text-center">
                           <h4>QUÊN MẬT KHẨU?</h4>
                           <p className="added-cart">Nhập email của bạn.</p>
-                          {loadingForgot && <LoadingBox></LoadingBox>}
                           {errorForgot && (
                             <MessageBox variant="danger">
                               {errorForgot}

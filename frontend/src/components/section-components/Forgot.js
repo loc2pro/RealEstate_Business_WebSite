@@ -69,7 +69,6 @@ function Forgot() {
                 className="ltn__form-box contact-form-box"
                 onFinish={onFinish}
               >
-                {loading && <LoadingBox></LoadingBox>}
                 {error && <MessageBox variant="danger">{error}</MessageBox>}
 
                 <Form.Item
